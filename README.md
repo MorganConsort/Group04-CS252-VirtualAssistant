@@ -1,20 +1,18 @@
 # Study Assistant — starter
 
-A starter repository for the CSC10014 Smart Virtual Assistant project.
+Group 04 Repository
 
 ## Setup
 
-TODO (Lab 1): write the exact steps a new teammate needs, from a fresh machine to
-running the app and the tests. Your partner will follow them without your help.
-
+To be Defined
 ## Run
 
-TODO
+To be Defined
 
 ## Test
 
-TODO
+To be Defined
 
 ## Project structure
 
-TODO
+To be Defined
