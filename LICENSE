@@ -1,21 +1,26 @@
-MIT License
+# License & Usage Notice
 
-Copyright (c) 2026 Rokieroo
+## University Project
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+This repository contains a **university project** developed for educational purposes as part of coursework at **Ho Chi Minh University** (**[Computational Thinking / CS252]**, **[2026]**)
+## Non-Commercial Status
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+- This project is **not commercialized** and is not offered as a product or service.
+- It was created solely for learning and academic assessment.
+- No revenue has been, or is intended to be, generated from this project.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+## Commercial Use
+
+**Commercial use of this project is not recommended.** The code, content, and assets are provided "as is" and have not been tested, audited, or hardened for production or commercial environments. Anyone who chooses to use any part of it commercially does so entirely at their own risk.
+
+## Third-Party Materials
+
+Any third-party libraries, datasets, images, or other resources used in this project remain the property of their respective owners and are subject to their own licenses and terms.
+
+## Disclaimer
+
+THIS PROJECT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING FROM THE USE OF THIS PROJECT.
+
+## Contact
+
+For questions about this project, please contact **[your email / GitHub profile]**.
