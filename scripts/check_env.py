@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Check that the development environment is set up correctly.
 
 Run from the repository root:  python scripts/check_env.py
@@ -36,7 +35,7 @@ check(".gitignore present", (root / ".gitignore").exists(), "Lab 1 step 5")
 readme = (root / "README.md").read_text(encoding="utf-8") if (root / "README.md").exists() else ""
 check("README has no TODO left", "TODO" not in readme, "Lab 1 step 5: write the setup instructions")
 if shutil.which("git") and (root / ".git").exists():
-    email = subprocess.run(["git", "config", "user.email"], capture_output=True, text=True, cwd=root).stdout.strip()
+    email = subprocess.run(["git", "config", "user.email"], check=False, capture_output=True, text=True, cwd=root).stdout.strip()
     check(f"git user.email set ({email or 'missing'})", bool(email), "git config --global user.email ...")
 sys.path.insert(0, str(root / "src"))
 try:
