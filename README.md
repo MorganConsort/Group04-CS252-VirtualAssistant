@@ -16,3 +16,7 @@ To be Defined
 ## Project structure
 
 To be Defined
+
+## Status
+
+- Project setup in progress.
