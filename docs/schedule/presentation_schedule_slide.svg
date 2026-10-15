@@ -1,0 +1,439 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="50%" stop-color="#1e1b4b" />
+      <stop offset="100%" stop-color="#090d16" />
+    </linearGradient>
+
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#0f172a" stop-opacity="0.9" />
+    </linearGradient>
+
+    <linearGradient id="feGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ec4899" />
+      <stop offset="100%" stop-color="#f43f5e" />
+    </linearGradient>
+
+    <linearGradient id="beGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#3b82f6" />
+      <stop offset="100%" stop-color="#06b6d4" />
+    </linearGradient>
+
+    <linearGradient id="aiGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#8b5cf6" />
+      <stop offset="100%" stop-color="#d946ef" />
+    </linearGradient>
+
+    <linearGradient id="qaGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#14b8a6" />
+    </linearGradient>
+
+    <linearGradient id="leadGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#eab308" />
+    </linearGradient>
+
+    <linearGradient id="m1Grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#b45309" />
+    </linearGradient>
+
+    <linearGradient id="m2Grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a855f7" />
+      <stop offset="100%" stop-color="#6b21a8" />
+    </linearGradient>
+
+    <!-- Drop Shadows -->
+    <filter id="glowM1" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="0" stdDeviation="10" flood-color="#f59e0b" flood-opacity="0.6"/>
+    </filter>
+    <filter id="glowM2" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="0" stdDeviation="10" flood-color="#a855f7" flood-opacity="0.6"/>
+    </filter>
+    <filter id="barShadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000000" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+
+  <style>
+    .font-sans { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+  </style>
+
+  <!-- Background -->
+  <rect width="1920" height="1080" fill="url(#bgGrad)" />
+
+  <!-- Background Ambient Glow Circles -->
+  <circle cx="300" cy="150" r="300" fill="#4338ca" opacity="0.12" filter="blur(80px)" />
+  <circle cx="1600" cy="900" r="350" fill="#7c3aed" opacity="0.15" filter="blur(90px)" />
+  <circle cx="1080" cy="500" r="250" fill="#f59e0b" opacity="0.08" filter="blur(90px)" />
+
+  <!-- HEADER SECTION -->
+  <g class="font-sans" transform="translate(80, 50)">
+    <!-- Pill Tag -->
+    <rect x="0" y="0" width="460" height="34" rx="17" fill="#312e81" stroke="#4f46e5" stroke-width="1.5" />
+    <circle cx="20" cy="17" r="6" fill="#10b981" />
+    <text x="36" y="22" fill="#c7d2fe" font-size="14" font-weight="600" letter-spacing="1">LỘ TRÌNH 8 TUẦN • AGILE TINH GỌN • VIBE CODING</text>
+
+    <!-- Main Title -->
+    <text x="0" y="78" fill="#ffffff" font-size="34" font-weight="800" letter-spacing="-0.5">KẾ HOẠCH DỰ ÁN: AI GF &amp; TRỢ LÝ LÊN LỊCH</text>
+    <text x="0" y="108" fill="#94a3b8" font-size="16" font-weight="400">
+      Tech Stack: <tspan fill="#38bdf8" font-weight="600">FastAPI (Backend)</tspan> + <tspan fill="#ec4899" font-weight="600">Next.js (Frontend)</tspan> | Quản lý: <tspan fill="#34d399" font-weight="600">Google Sheets</tspan> | 6 Thành viên
+    </text>
+
+    <!-- Top Key Highlights Cards -->
+    <g transform="translate(1080, 0)">
+      <!-- Box MVP -->
+      <rect x="0" y="0" width="310" height="85" rx="14" fill="#78350f" fill-opacity="0.35" stroke="#f59e0b" stroke-width="1.5" filter="url(#glowM1)"/>
+      <text x="20" y="28" fill="#fbbf24" font-size="12" font-weight="700" letter-spacing="1">MỐC QUAN TRỌNG 1 (TUẦN 5)</text>
+      <text x="20" y="55" fill="#ffffff" font-size="20" font-weight="800">🏆 Release MVP Cá Nhân</text>
+      <text x="20" y="73" fill="#fde68a" font-size="12">Tạo Task ➔ Auto Xếp Lịch ➔ Check-in</text>
+
+      <!-- Box Final -->
+      <rect x="330" y="0" width="310" height="85" rx="14" fill="#581c87" fill-opacity="0.35" stroke="#a855f7" stroke-width="1.5" filter="url(#glowM2)"/>
+      <text x="350" y="28" fill="#d8b4fe" font-size="12" font-weight="700" letter-spacing="1">MỐC QUAN TRỌNG 2 (TUẦN 8)</text>
+      <text x="350" y="55" fill="#ffffff" font-size="20" font-weight="800">🎓 Bảo Vệ Đồ Án</text>
+      <text x="350" y="73" fill="#e9d5ff" font-size="12">Team Workspace + AI GF Đồng Hành</text>
+    </g>
+  </g>
+
+  <!-- MAIN GANTT / TIMELINE GRID CONTAINER -->
+  <g class="font-sans" transform="translate(80, 200)">
+    
+    <!-- PHASE HEADERS (TOP BANNER) -->
+    <!-- Phase 1 Header (W1 - W5: 5 columns = 5 * 180 = 900px) -->
+    <rect x="260" y="0" width="900" height="38" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1" />
+    <text x="710" y="24" fill="#38bdf8" font-size="14" font-weight="700" text-anchor="middle" letter-spacing="1">
+      ⚡ GIAI ĐOẠN 1: CHẠY NƯỚC RÚT ĐẾN MVP (TUẦN 1 - TUẦN 5)
+    </text>
+
+    <!-- Phase 2 Header (W6 - W8: 3 columns = 3 * 180 = 540px) -->
+    <rect x="1180" y="0" width="540" height="38" rx="8" fill="#2e1065" stroke="#6b21a8" stroke-width="1" />
+    <text x="1450" y="24" fill="#c084fc" font-size="14" font-weight="700" text-anchor="middle" letter-spacing="1">
+      ✨ GIAI ĐOẠN 2: TEAM WORKSPACE &amp; AI GF (TUẦN 6 - TUẦN 8)
+    </text>
+
+    <!-- TIMELINE WEEKS HEADER (X: 260 to 1700) -->
+    <!-- Column width = 180px each -->
+    <!-- W1 -->
+    <g transform="translate(260, 48)">
+      <rect x="0" y="0" width="175" height="42" rx="6" fill="#1e293b" />
+      <text x="87" y="20" fill="#f8fafc" font-size="14" font-weight="700" text-anchor="middle">TUẦN 1</text>
+      <text x="87" y="35" fill="#94a3b8" font-size="11" text-anchor="middle">Kiến trúc &amp; Wireframe</text>
+    </g>
+    <!-- W2 -->
+    <g transform="translate(440, 48)">
+      <rect x="0" y="0" width="175" height="42" rx="6" fill="#1e293b" />
+      <text x="87" y="20" fill="#f8fafc" font-size="14" font-weight="700" text-anchor="middle">TUẦN 2</text>
+      <text x="87" y="35" fill="#94a3b8" font-size="11" text-anchor="middle">Core Data UC-01</text>
+    </g>
+    <!-- W3 -->
+    <g transform="translate(620, 48)">
+      <rect x="0" y="0" width="175" height="42" rx="6" fill="#1e293b" />
+      <text x="87" y="20" fill="#f8fafc" font-size="14" font-weight="700" text-anchor="middle">TUẦN 3</text>
+      <text x="87" y="35" fill="#94a3b8" font-size="11" text-anchor="middle">Scheduler UC-02, 03</text>
+    </g>
+    <!-- W4 -->
+    <g transform="translate(800, 48)">
+      <rect x="0" y="0" width="175" height="42" rx="6" fill="#1e293b" />
+      <text x="87" y="20" fill="#f8fafc" font-size="14" font-weight="700" text-anchor="middle">TUẦN 4</text>
+      <text x="87" y="35" fill="#94a3b8" font-size="11" text-anchor="middle">Ghép nối &amp; Replan</text>
+    </g>
+    <!-- W5 (MVP Milestone Week) -->
+    <g transform="translate(980, 48)">
+      <rect x="0" y="0" width="175" height="42" rx="6" fill="#78350f" stroke="#f59e0b" stroke-width="1.5" />
+      <text x="87" y="20" fill="#fef08a" font-size="14" font-weight="800" text-anchor="middle">TUẦN 5 🏆</text>
+      <text x="87" y="35" fill="#fef9c3" font-size="11" font-weight="600" text-anchor="middle">Freeze &amp; Release MVP</text>
+    </g>
+    <!-- W6 -->
+    <g transform="translate(1180, 48)">
+      <rect x="0" y="0" width="175" height="42" rx="6" fill="#3b0764" />
+      <text x="87" y="20" fill="#f8fafc" font-size="14" font-weight="700" text-anchor="middle">TUẦN 6</text>
+      <text x="87" y="35" fill="#c084fc" font-size="11" text-anchor="middle">Team &amp; AI Kickoff</text>
+    </g>
+    <!-- W7 -->
+    <g transform="translate(1360, 48)">
+      <rect x="0" y="0" width="175" height="42" rx="6" fill="#3b0764" />
+      <text x="87" y="20" fill="#f8fafc" font-size="14" font-weight="700" text-anchor="middle">TUẦN 7</text>
+      <text x="87" y="35" fill="#c084fc" font-size="11" text-anchor="middle">Phối hợp &amp; Tinh chỉnh</text>
+    </g>
+    <!-- W8 (Final Milestone Week) -->
+    <g transform="translate(1540, 48)">
+      <rect x="0" y="0" width="180" height="42" rx="6" fill="#581c87" stroke="#a855f7" stroke-width="1.5" />
+      <text x="90" y="20" fill="#f3e8ff" font-size="14" font-weight="800" text-anchor="middle">TUẦN 8 🎓</text>
+      <text x="90" y="35" fill="#e9d5ff" font-size="11" font-weight="600" text-anchor="middle">Bảo Vệ Đồ Án</text>
+    </g>
+
+    <!-- VERTICAL GRID LINES -->
+    <g stroke="#334155" stroke-dasharray="4,4" opacity="0.4">
+      <line x1="260" y1="100" x2="260" y2="600" />
+      <line x1="440" y1="100" x2="440" y2="600" />
+      <line x1="620" y1="100" x2="620" y2="600" />
+      <line x1="800" y1="100" x2="800" y2="600" />
+      <line x1="980" y1="100" x2="980" y2="600" />
+      <line x1="1160" y1="100" x2="1160" y2="600" stroke="#f59e0b" stroke-width="2" opacity="0.8" />
+      <line x1="1180" y1="100" x2="1180" y2="600" />
+      <line x1="1360" y1="100" x2="1360" y2="600" />
+      <line x1="1540" y1="100" x2="1540" y2="600" />
+      <line x1="1720" y1="100" x2="1720" y2="600" stroke="#a855f7" stroke-width="2" opacity="0.8" />
+    </g>
+
+    <!-- ROW 1: FRONTEND & UI/UX (Mân, Thịnh, Đạt) -->
+    <!-- Label -->
+    <g transform="translate(0, 115)">
+      <rect x="0" y="0" width="245" height="75" rx="10" fill="url(#cardGrad)" stroke="#ec4899" stroke-width="1.2" />
+      <circle cx="28" cy="37" r="14" fill="#ec4899" />
+      <text x="28" y="42" fill="#ffffff" font-size="12" font-weight="bold" text-anchor="middle">UI</text>
+      <text x="52" y="30" fill="#fbcfe8" font-size="14" font-weight="700">Frontend &amp; UI/UX</text>
+      <text x="52" y="48" fill="#cbd5e1" font-size="12">Mân, Thịnh, Đạt</text>
+      <text x="52" y="64" fill="#f472b6" font-size="10">Next.js • Tailwind • Figma</text>
+
+      <!-- Bars -->
+      <!-- W1 Bar: Figma Wireframe -->
+      <g transform="translate(260, 15)">
+        <rect width="175" height="45" rx="8" fill="url(#feGrad)" filter="url(#barShadow)" />
+        <text x="87" y="22" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">Wireframe &amp; Figma</text>
+        <text x="87" y="37" fill="#ffe4e6" font-size="10" text-anchor="middle">Login, Todo, Calendar</text>
+      </g>
+      <!-- W2 Bar: Task Screen -->
+      <g transform="translate(440, 15)">
+        <rect width="175" height="45" rx="8" fill="url(#feGrad)" filter="url(#barShadow)" />
+        <text x="87" y="22" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">Màn hình Task/Goal</text>
+        <text x="87" y="37" fill="#ffe4e6" font-size="10" text-anchor="middle">Next.js UI (UC-01)</text>
+      </g>
+      <!-- W3 Bar: Calendar View -->
+      <g transform="translate(620, 15)">
+        <rect width="175" height="45" rx="8" fill="url(#feGrad)" filter="url(#barShadow)" />
+        <text x="87" y="22" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">Hiển thị lịch &amp; Check-in</text>
+        <text x="87" y="37" fill="#ffe4e6" font-size="10" text-anchor="middle">Internal View (UC-05)</text>
+      </g>
+      <!-- W4 Bar: Integration -->
+      <g transform="translate(800, 15)">
+        <rect width="175" height="45" rx="8" fill="url(#feGrad)" filter="url(#barShadow)" />
+        <text x="87" y="22" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">Ghép API &amp; Replan</text>
+        <text x="87" y="37" fill="#ffe4e6" font-size="10" text-anchor="middle">Xử lý lịch đổi (UC-06)</text>
+      </g>
+      <!-- W5 Bar: Freeze -->
+      <g transform="translate(980, 15)">
+        <rect width="175" height="45" rx="8" fill="#e11d48" filter="url(#barShadow)" />
+        <text x="87" y="22" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">Tối ưu UI &amp; Fix Bug</text>
+        <text x="87" y="37" fill="#ffe4e6" font-size="10" text-anchor="middle">Đóng băng tính năng</text>
+      </g>
+      <!-- W6 Bar: Team Workspace UI -->
+      <g transform="translate(1180, 15)">
+        <rect width="175" height="45" rx="8" fill="url(#feGrad)" filter="url(#barShadow)" />
+        <text x="87" y="22" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">Team Workspace UI</text>
+        <text x="87" y="37" fill="#ffe4e6" font-size="10" text-anchor="middle">Share Tasks (UC-09, 10)</text>
+      </g>
+      <!-- W7 Bar: Toast Notification -->
+      <g transform="translate(1360, 15)">
+        <rect width="175" height="45" rx="8" fill="url(#feGrad)" filter="url(#barShadow)" />
+        <text x="87" y="22" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">Toast Notification</text>
+        <text x="87" y="37" fill="#ffe4e6" font-size="10" text-anchor="middle">Nhắc nhở lịch (UC-12)</text>
+      </g>
+    </g>
+
+    <!-- ROW 2: BACKEND & SCHEDULER LOGIC (Minh, Thắng) -->
+    <g transform="translate(0, 210)">
+      <rect x="0" y="0" width="245" height="75" rx="10" fill="url(#cardGrad)" stroke="#3b82f6" stroke-width="1.2" />
+      <circle cx="28" cy="37" r="14" fill="#3b82f6" />
+      <text x="28" y="42" fill="#ffffff" font-size="12" font-weight="bold" text-anchor="middle">BE</text>
+      <text x="52" y="30" fill="#bfdbfe" font-size="14" font-weight="700">Backend &amp; Scheduler</text>
+      <text x="52" y="48" fill="#cbd5e1" font-size="12">Minh, Thắng</text>
+      <text x="52" y="64" fill="#60a5fa" font-size="10">FastAPI • Postgres • Python</text>
+
+      <!-- Bars -->
+      <!-- W1 Bar: DB Schema & Auth -->
+      <g transform="translate(260, 15)">
+        <rect width="175" height="45" rx="8" fill="url(#beGrad)" filter="url(#barShadow)" />
+        <text x="87" y="22" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">Schema DB &amp; Auth API</text>
+        <text x="87" y="37" fill="#e0f2fe" font-size="10" text-anchor="middle">Dựng khung FastAPI</text>
+      </g>
+      <!-- W2 Bar: CRUD Tasks -->
+      <g transform="translate(440, 15)">
+        <rect width="175" height="45" rx="8" fill="url(#beGrad)" filter="url(#barShadow)" />
+        <text x="87" y="22" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">API CRUD Tasks/Goals</text>
+        <text x="87" y="37" fill="#e0f2fe" font-size="10" text-anchor="middle">Lấy task theo ngày (UC-01)</text>
+      </g>
+      <!-- W3 Bar: Scheduler Engine -->
+      <g transform="translate(620, 15)">
+        <rect width="175" height="45" rx="8" fill="url(#beGrad)" filter="url(#barShadow)" />
+        <text x="87" y="22" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">Scheduler Algorithm</text>
+        <text x="87" y="37" fill="#e0f2fe" font-size="10" text-anchor="middle">Xếp vào slot rảnh (UC-02,03)</text>
+      </g>
+      <!-- W4 Bar: API Replan -->
+      <g transform="translate(800, 15)">
+        <rect width="175" height="45" rx="8" fill="url(#beGrad)" filter="url(#barShadow)" />
+        <text x="87" y="22" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">API Replan Schedule</text>
+        <text x="87" y="37" fill="#e0f2fe" font-size="10" text-anchor="middle">Ghép API &amp; Debug</text>
+      </g>
+      <!-- W5 Bar: Polish BE -->
+      <g transform="translate(980, 15)">
+        <rect width="175" height="45" rx="8" fill="#0284c7" filter="url(#barShadow)" />
+        <text x="87" y="22" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">Ổn định API Core</text>
+        <text x="87" y="37" fill="#e0f2fe" font-size="10" text-anchor="middle">Tối ưu truy vấn &amp; cache</text>
+      </g>
+      <!-- W6 Bar: Team Workspace API -->
+      <g transform="translate(1180, 15)">
+        <rect width="175" height="45" rx="8" fill="url(#beGrad)" filter="url(#barShadow)" />
+        <text x="87" y="22" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">API Team Workspace</text>
+        <text x="87" y="37" fill="#e0f2fe" font-size="10" text-anchor="middle">Share Task (UC-09, 10)</text>
+      </g>
+      <!-- W7 Bar: Coordinate Team -->
+      <g transform="translate(1360, 15)">
+        <rect width="175" height="45" rx="8" fill="url(#beGrad)" filter="url(#barShadow)" />
+        <text x="87" y="22" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">Coordinate Schedule</text>
+        <text x="87" y="37" fill="#e0f2fe" font-size="10" text-anchor="middle">Tìm giờ rảnh chung (UC-11)</text>
+      </g>
+    </g>
+
+    <!-- ROW 3: AI GF INTEGRATION (Minh, Thắng) -->
+    <g transform="translate(0, 305)">
+      <rect x="0" y="0" width="245" height="75" rx="10" fill="url(#cardGrad)" stroke="#8b5cf6" stroke-width="1.2" />
+      <circle cx="28" cy="37" r="14" fill="#8b5cf6" />
+      <text x="28" y="42" fill="#ffffff" font-size="12" font-weight="bold" text-anchor="middle">AI</text>
+      <text x="52" y="30" fill="#ddd6fe" font-size="14" font-weight="700">AI GF &amp; LLM</text>
+      <text x="52" y="48" fill="#cbd5e1" font-size="12">Minh, Thắng</text>
+      <text x="52" y="64" fill="#a78bfa" font-size="10">Gemini API / OpenAI • Prompt</text>
+
+      <!-- Placeholder in MVP -->
+      <g transform="translate(260, 15)">
+        <rect width="895" height="45" rx="8" fill="#1e1b4b" stroke="#4338ca" stroke-dasharray="6,4" stroke-width="1" />
+        <text x="447" y="28" fill="#818cf8" font-size="12" font-weight="600" text-anchor="middle">
+          💤 Tạm gác AI ở Giai đoạn 1 để tập trung tối đa hoàn thiện tính năng lõi &amp; MVP (Không ôm đồm)
+        </text>
+      </g>
+
+      <!-- W6 Bar: AI Kickoff -->
+      <g transform="translate(1180, 15)">
+        <rect width="175" height="45" rx="8" fill="url(#aiGrad)" filter="url(#barShadow)" />
+        <text x="87" y="22" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">Prompt AI GF (UC-08)</text>
+        <text x="87" y="37" fill="#f5d0fe" font-size="10" text-anchor="middle">Sinh phản hồi tiến độ (UC-07)</text>
+      </g>
+      <!-- W7 Bar: AI Polish -->
+      <g transform="translate(1360, 15)">
+        <rect width="175" height="45" rx="8" fill="url(#aiGrad)" filter="url(#barShadow)" />
+        <text x="87" y="22" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">Tối ưu Personality AI</text>
+        <text x="87" y="37" fill="#f5d0fe" font-size="10" text-anchor="middle">Phản hồi cảm xúc &amp; Cá nhân</text>
+      </g>
+    </g>
+
+    <!-- ROW 4: QA/QC & TESTING (Đăng) -->
+    <g transform="translate(0, 400)">
+      <rect x="0" y="0" width="245" height="75" rx="10" fill="url(#cardGrad)" stroke="#10b981" stroke-width="1.2" />
+      <circle cx="28" cy="37" r="14" fill="#10b981" />
+      <text x="28" y="42" fill="#ffffff" font-size="12" font-weight="bold" text-anchor="middle">QA</text>
+      <text x="52" y="30" fill="#a7f3d0" font-size="14" font-weight="700">QA / QC &amp; DevOps</text>
+      <text x="52" y="48" fill="#cbd5e1" font-size="12">Lê Hồng Đăng</text>
+      <text x="52" y="64" fill="#34d399" font-size="10">Google Sheets • Test Cases • CI</text>
+
+      <!-- Bars -->
+      <g transform="translate(260, 15)">
+        <rect width="175" height="45" rx="8" fill="url(#qaGrad)" filter="url(#barShadow)" />
+        <text x="87" y="22" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">Setup Repo &amp; Sheets</text>
+        <text x="87" y="37" fill="#ccfbf1" font-size="10" text-anchor="middle">Workflow &amp; CI cơ bản</text>
+      </g>
+      <g transform="translate(440, 15)">
+        <rect width="175" height="45" rx="8" fill="url(#qaGrad)" filter="url(#barShadow)" />
+        <text x="87" y="22" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">Viết Test Case Core</text>
+        <text x="87" y="37" fill="#ccfbf1" font-size="10" text-anchor="middle">Test API &amp; UI Task</text>
+      </g>
+      <g transform="translate(620, 15)">
+        <rect width="175" height="45" rx="8" fill="url(#qaGrad)" filter="url(#barShadow)" />
+        <text x="87" y="22" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">Test API Scheduler</text>
+        <text x="87" y="37" fill="#ccfbf1" font-size="10" text-anchor="middle">Kiểm tra logic slot rảnh</text>
+      </g>
+      <g transform="translate(800, 15)">
+        <rect width="175" height="45" rx="8" fill="url(#qaGrad)" filter="url(#barShadow)" />
+        <text x="87" y="22" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">Edge Cases &amp; Bug Log</text>
+        <text x="87" y="37" fill="#ccfbf1" font-size="10" text-anchor="middle">Trùng lịch, sai format</text>
+      </g>
+      <g transform="translate(980, 15)">
+        <rect width="175" height="45" rx="8" fill="#059669" filter="url(#barShadow)" />
+        <text x="87" y="22" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">Nghiệm thu MVP W5</text>
+        <text x="87" y="37" fill="#ccfbf1" font-size="10" text-anchor="middle">Xác nhận Pass luồng chính</text>
+      </g>
+      <g transform="translate(1180, 15)">
+        <rect width="175" height="45" rx="8" fill="url(#qaGrad)" filter="url(#barShadow)" />
+        <text x="87" y="22" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">Test Workspace &amp; AI</text>
+        <text x="87" y="37" fill="#ccfbf1" font-size="10" text-anchor="middle">Kiểm tra ảo giác AI</text>
+      </g>
+      <g transform="translate(1360, 15)">
+        <rect width="175" height="45" rx="8" fill="url(#qaGrad)" filter="url(#barShadow)" />
+        <text x="87" y="22" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">Test Phối Hợp Team</text>
+        <text x="87" y="37" fill="#ccfbf1" font-size="10" text-anchor="middle">Test Coordinate schedule</text>
+      </g>
+      <g transform="translate(1540, 15)">
+        <rect width="180" height="45" rx="8" fill="#047857" stroke="#34d399" stroke-width="1.5" filter="url(#barShadow)" />
+        <text x="90" y="22" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">Full Regression Test</text>
+        <text x="90" y="37" fill="#a7f3d0" font-size="10" text-anchor="middle">Nghiệm thu toàn hệ thống</text>
+      </g>
+    </g>
+
+    <!-- ROW 5: MANAGEMENT & FINAL DELIVERY (Đạt - Leader) -->
+    <g transform="translate(0, 495)">
+      <rect x="0" y="0" width="245" height="75" rx="10" fill="url(#cardGrad)" stroke="#f59e0b" stroke-width="1.2" />
+      <circle cx="28" cy="37" r="14" fill="#f59e0b" />
+      <text x="28" y="42" fill="#ffffff" font-size="12" font-weight="bold" text-anchor="middle">PM</text>
+      <text x="52" y="30" fill="#fde68a" font-size="14" font-weight="700">Leader &amp; Điều Phối</text>
+      <text x="52" y="48" fill="#cbd5e1" font-size="12">Võ Thành Đạt</text>
+      <text x="52" y="64" fill="#fbbf24" font-size="10">Quản lý • Unblock • Thuyết trình</text>
+
+      <g transform="translate(260, 15)">
+        <rect width="175" height="45" rx="8" fill="url(#leadGrad)" filter="url(#barShadow)" />
+        <text x="87" y="22" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">Setup Khung Dự Án</text>
+        <text x="87" y="37" fill="#fef3c7" font-size="10" text-anchor="middle">Thống nhất kiến trúc</text>
+      </g>
+      <g transform="translate(440, 15)">
+        <rect width="175" height="45" rx="8" fill="url(#leadGrad)" filter="url(#barShadow)" />
+        <text x="87" y="22" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">Hỗ trợ FE Core Data</text>
+        <text x="87" y="37" fill="#fef3c7" font-size="10" text-anchor="middle">Code &amp; Unblock task</text>
+      </g>
+      <g transform="translate(800, 15)">
+        <rect width="175" height="45" rx="8" fill="url(#leadGrad)" filter="url(#barShadow)" />
+        <text x="87" y="22" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">Điều phối Ghép Nối</text>
+        <text x="87" y="37" fill="#fef3c7" font-size="10" text-anchor="middle">Rà soát tiến độ FE-BE</text>
+      </g>
+      <g transform="translate(980, 15)">
+        <rect width="175" height="45" rx="8" fill="#d97706" filter="url(#barShadow)" />
+        <text x="87" y="22" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">Review &amp; Freeze MVP</text>
+        <text x="87" y="37" fill="#fef3c7" font-size="10" text-anchor="middle">Đánh giá chất lượng W5</text>
+      </g>
+      <g transform="translate(1540, 15)">
+        <rect width="180" height="45" rx="8" fill="url(#m2Grad)" stroke="#e9d5ff" stroke-width="1.5" filter="url(#glowM2)" />
+        <text x="90" y="22" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">Báo Cáo, UML &amp; Slide</text>
+        <text x="90" y="37" fill="#f3e8ff" font-size="10" text-anchor="middle">Thuyết trình bảo vệ đồ án</text>
+      </g>
+    </g>
+
+  </g>
+
+  <!-- FOOTER PRINCIPLES & METRICS (SLIDE FOOTER) -->
+  <g class="font-sans" transform="translate(80, 930)">
+    <!-- 3 Principle Cards -->
+    <g transform="translate(0, 0)">
+      <rect x="0" y="0" width="560" height="90" rx="12" fill="#1e293b" fill-opacity="0.8" stroke="#334155" stroke-width="1" />
+      <text x="24" y="30" fill="#38bdf8" font-size="14" font-weight="700">1. Quản lý Tinh Gọn qua Google Sheets</text>
+      <text x="24" y="55" fill="#94a3b8" font-size="12">Các cột: Task Name, Assignee, Status, Priority, Due Date.</text>
+      <text x="24" y="73" fill="#cbd5e1" font-size="12">Daily Standup 15 phút mỗi tối để giải quyết nút thắt (unblock).</text>
+    </g>
+
+    <g transform="translate(595, 0)">
+      <rect x="0" y="0" width="560" height="90" rx="12" fill="#1e293b" fill-opacity="0.8" stroke="#334155" stroke-width="1" />
+      <text x="24" y="30" fill="#ec4899" font-size="14" font-weight="700">2. Vibe Coding An Toàn</text>
+      <text x="24" y="55" fill="#94a3b8" font-size="12">Tận dụng AI để code nhanh, nhưng team phải làm chủ luồng dữ liệu.</text>
+      <text x="24" y="73" fill="#cbd5e1" font-size="12">QA kiểm thử chặt chẽ mọi edge case để tránh lỗi ảo giác từ AI.</text>
+    </g>
+
+    <g transform="translate(1190, 0)">
+      <rect x="0" y="0" width="570" height="90" rx="12" fill="#1e293b" fill-opacity="0.8" stroke="#334155" stroke-width="1" />
+      <text x="24" y="30" fill="#a855f7" font-size="14" font-weight="700">3. Tập trung Trọng Tâm (Done &gt; Perfect)</text>
+      <text x="24" y="55" fill="#94a3b8" font-size="12">Tự xây dựng Internal Calendar giả lập thay vì tích hợp Google Calendar phức tạp.</text>
+      <text x="24" y="73" fill="#cbd5e1" font-size="12">Đảm bảo chắc chắn MVP cá nhân chạy hoàn hảo trước khi sang tính năng nhóm.</text>
+    </g>
+  </g>
+
+</svg>
