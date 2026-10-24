@@ -1,0 +1,67 @@
+import json
+
+from devcli.__main__ import build_parser
+from devcli.ai import BENCHMARK, load_cases
+from devcli.conventions import check_branch, check_commit
+from devcli.db import init_db, scan_text
+from devcli.qa import REPORT_TEMPLATE
+
+
+def test_parser_has_all_domains():
+    parser = build_parser()
+    for argv in (["ui", "dev"], ["ai", "benchmark", "validate"], ["db", "init"], ["qa", "lint"], ["devops", "ci"]):
+        assert parser.parse_args(argv).func
+
+
+def test_branch_names():
+    assert check_branch("ai-minh/12-item-generation") is None
+    assert check_branch("uiux-thinh/3-upload-page") is None
+    assert check_branch("main") is None
+    assert check_branch("claude/project-thread-zsdgmy") is None
+    assert check_branch("minh-ai/feature") is not None
+    assert check_branch("feature/login") is not None
+    assert check_branch("ai-minh/item-generation") is not None
+
+
+def test_commit_messages():
+    assert check_commit("feat(ai): add item generation prompt") is None
+    assert check_commit("fix(db): 🐛 drop duplicate index") is None
+    assert check_commit("docs: update readme\n\nlonger body") is None
+    assert check_commit("Merge pull request #3 from MorganConsort/UI/UX") is None
+    assert check_commit("update code") is not None
+    assert check_commit("feature(ai): add prompt") is not None
+    assert check_commit("feat(ai): " + "x" * 120) is not None
+
+
+def test_benchmark_file_is_valid():
+    cases, errors = load_cases(BENCHMARK)
+    assert errors == []
+    assert len(cases) >= 5
+
+
+def test_benchmark_catches_errors(tmp_path):
+    bad = tmp_path / "bad.jsonl"
+    rows = [
+        {"id": "X1", "use_case": "UC-1", "kind": "normal", "question": "q", "expected": "e"},
+        {"id": "X1", "use_case": "UC-02", "kind": "weird", "question": "q", "expected": "e"},
+    ]
+    bad.write_text("\n".join(json.dumps(r) for r in rows) + "\n{not json", encoding="utf-8")
+    _, errors = load_cases(bad)
+    assert len(errors) == 4
+
+
+def test_init_db_creates_tables(tmp_path):
+    tables = init_db(tmp_path / "t.db")
+    for name in ("users", "sources", "items", "reviews", "companion_events"):
+        assert name in tables
+
+
+def test_scan_text_finds_fake_key():
+    fake = "sk-" + "a" * 32
+    assert scan_text(f"OPENAI_API_KEY={fake}") == ["OpenAI key"]
+    assert scan_text("no secrets here") == []
+
+
+def test_report_template_formats():
+    text = REPORT_TEMPLATE.format(week=1, today="2026-10-24")
+    assert text.startswith("# Báo cáo QA tuần 1")
