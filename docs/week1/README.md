@@ -9,9 +9,9 @@ Cuối tuần, trên staging, một sinh viên có thể: **upload file slide CS
 
 | Role | Thành viên | Nhiệm vụ chính | Issue | File chi tiết |
 |---|---|---|---|---|
-| UI/UX | Thịnh, Mân, Đạt | Wireframe, app shell Pathly, màn hình Upload + Concept editor | #5, #6, #7 | [UIUX.md](UIUX.md) |
-| AI implementation | Thắng, Minh | Module `llm`, trích concept, sinh câu hỏi có trích dẫn, BM25 | #8, #9, #10, #11 | [AI.md](AI.md) |
-| Database & Security | Thắng, Minh, Võ Thành Đạt | Schema + migration, FastAPI + ingest PDF, auth | #12, #13, #14 | [DB_SECURITY.md](DB_SECURITY.md) |
+| UI/UX | Nguyễn Quốc Thịnh, Lê Phan Đức Mân | Wireframe, app shell Pathly, màn hình Upload + Concept editor | #5, #6, #7 | [UIUX.md](UIUX.md) |
+| AI implementation | Trần Quyết Thắng, Võ Gia Minh | Module `llm`, trích concept, sinh câu hỏi có trích dẫn, BM25 | #8, #9, #10, #11 | [AI.md](AI.md) |
+| Database & Security | Trần Quyết Thắng, Võ Gia Minh, Nguyễn Quốc Thịnh | Schema + migration, FastAPI + ingest PDF, auth | #12, #13, #14 | [DB_SECURITY.md](DB_SECURITY.md) |
 | QA/QC | Lê Hồng Đăng | Test plan, benchmark 20 case, integration test, báo cáo tuần | #15, #16 | [QA_QC.md](QA_QC.md) |
 | DevOps | Võ Thành Đạt, Lê Hồng Đăng | Milestone, branch protection, CI, Docker Compose, staging | #17, #18 | [DEVOPS.md](DEVOPS.md) |
 

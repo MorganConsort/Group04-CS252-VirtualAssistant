@@ -1,6 +1,6 @@
 # Tasks for Database & Security (Tuần 1: Schema, FastAPI Ingest, Auth)
 
-Tài liệu này mô tả chi tiết nhiệm vụ tuần 1 của nhóm Database & Security (Thắng, Minh, Võ Thành Đạt): schema, API ingest, xác thực và các quy tắc bảo mật phải theo từ ngày đầu.
+Tài liệu này mô tả chi tiết nhiệm vụ tuần 1 của nhóm Database & Security (Trần Quyết Thắng, Võ Gia Minh, Nguyễn Quốc Thịnh): schema, API ingest, xác thực và các quy tắc bảo mật phải theo từ ngày đầu.
 
 ## 🎯 Sứ mệnh tuần 1
 Dựng **nền dữ liệu và backend**: schema có migration, API nhận PDF và lưu từng trang, tài khoản an toàn. Đây là đường găng của tuần: AI không thể chạy thật nếu chưa có bảng `sources`.
@@ -15,7 +15,7 @@ Dưới đây là các hạng mục công việc cần hoàn thiện:
   - **Endpoint**: `GET /api/v1/health`, `POST /api/v1/courses`, `POST /api/v1/courses/{id}/sources`.
   - **Kiểm tra đầu vào**: đuôi + magic bytes `%PDF`, ≤ 20 MB, `pypdf` đọc được.
   - **Lưu**: một dòng mỗi trang, trang bắt đầu từ 1; cảnh báo `scanned_pdf` nếu > 80% trang rỗng.
-- [ ] **Task 3: Auth (#14, Võ Thành Đạt, 10 giờ, xong thứ Năm)**
+- [ ] **Task 3: Auth (#14, Thịnh, 10 giờ, xong thứ Năm)**
   - **Đăng ký/đăng nhập**: argon2, JWT 60 phút, khóa tạm sau 5 lần sai.
   - **Phân quyền**: mọi truy vấn lọc theo `owner_id`; tài nguyên người khác → 404.
   - **Chuẩn bị age gate**: lưu `birth_year`, `account_level`, `adult_verified = 0`.
@@ -61,7 +61,7 @@ Dưới đây là các hạng mục công việc cần hoàn thiện:
 | Với | Cần gì | Khi nào |
 |---|---|---|
 | AI (Minh) | Review schema 15 phút (`items`, `prereqs`, `cards`) | Thứ Hai |
-| UI/UX (Đạt, Mân) | Mã lỗi và định dạng response upload/auth | Thứ Ba |
+| UI/UX (Mân) | Mã lỗi và định dạng response upload/auth | Thứ Ba |
 | DevOps (#18) | Dockerfile chạy được app; `DATABASE_URL` Postgres | Thứ Năm |
 | QA (#16) | Fixture `client`, `sample_pdf`; review PR | Thứ Tư–Năm |
 
@@ -88,5 +88,5 @@ Dưới đây là các hạng mục công việc cần hoàn thiện:
 - **OWASP ASVS (mục Authentication)**: yêu cầu tối thiểu cho mật khẩu và khóa đăng nhập.
 
 ## 🌿 Git Workflow & Branching
-- Nhánh: `dbsec-<name>/<issue>-<task>`, ví dụ `dbsec-thang/12-schema-migration`, `dbsec-vodat/14-auth`.
+- Nhánh: `dbsec-<name>/<issue>-<task>`, ví dụ `dbsec-thang/12-schema-migration`, `dbsec-thinh/14-auth`.
 - Commit: `feat(db): add initial alembic migration`, `feat(security): hash passwords with argon2`.

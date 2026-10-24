@@ -1,6 +1,6 @@
 # Tasks for DevOps (Tuần 1: Git Workflow, CI, Docker Compose, Staging)
 
-Tài liệu này mô tả chi tiết nhiệm vụ DevOps tuần 1 (Võ Thành Đạt, Lê Hồng Đăng): rào chắn cho quy trình Git, CI, môi trường chạy chung và staging tự deploy.
+Tài liệu này mô tả chi tiết nhiệm vụ DevOps tuần 1 (Võ Thành Đạt, Lê Hồng Đăng, hai Developer của team): rào chắn cho quy trình Git, CI, môi trường chạy chung và staging tự deploy.
 
 ## 🎯 Sứ mệnh tuần 1
 Để mọi người code an toàn và nhanh: **không ai push thẳng `main`**, mọi PR được kiểm tra tự động, cả team chạy cùng môi trường và mỗi lần merge thì staging tự cập nhật.
@@ -87,5 +87,5 @@ Lỡ commit secret: **thu hồi key ở nhà cung cấp trước**, báo DevOps,
 | Thời gian từ merge đến staging cập nhật | _... phút_ |
 
 ## 🌿 Git Workflow & Branching
-- Nhánh: `devops-<name>/<issue>-<task>`, ví dụ `devops-vodat/17-git-workflow`, `devops-dang/18-compose-staging`.
+- Nhánh: `devops-<name>/<issue>-<task>`, ví dụ `devops-dat/17-git-workflow`, `devops-dang/18-compose-staging`.
 - Commit: `ci(devops): check branch names on pull requests`, `chore(devops): add docker compose for api and db`.

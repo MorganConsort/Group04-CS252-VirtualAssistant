@@ -13,14 +13,25 @@ Mỗi người dùng **mã role** của mình ở đầu tên nhánh và tiêu �
 
 | Mảng (Domain) | Mã role | Thành viên | Label trên GitHub |
 |---|---|---|---|
-| UI/UX | `uiux` | Mân, Thịnh, Đạt | `role: ui-ux` |
-| AI implementation | `ai` | Minh, Thắng | `role: ai` |
-| Database & Security | `dbsec` | Minh, Thắng | `role: db-security` |
+| UI/UX | `uiux` | Lê Phan Đức Mân, Nguyễn Quốc Thịnh | `role: ui-ux` |
+| AI implementation (AI-Integration) | `ai` | Võ Gia Minh, Trần Quyết Thắng | `role: ai` |
+| Database & Security (Security & Data) | `dbsec` | Võ Gia Minh, Trần Quyết Thắng, Nguyễn Quốc Thịnh | `role: db-security` |
 | QA/QC | `qa` | Lê Hồng Đăng | `role: qa-qc` |
-| DevOps | `devops` | Lê Hồng Đăng, Võ Thành Đạt | `role: devops` |
-| Leader / PM | `pm` | Võ Thành Đạt | (không bắt buộc) |
+| DevOps | `devops` | Lê Hồng Đăng, Võ Thành Đạt (Developer) | `role: devops` |
+| Leader / Presenter | `pm` | Võ Thành Đạt | (không bắt buộc) |
 
-`<name>` là tên của bạn viết thường, không dấu, không khoảng trắng: `man`, `thinh`, `dat`, `minh`, `thang`, `dang`. Hai người trùng tên thì thêm họ: `vodat`.
+Người có hai mảng dùng mã role của mảng mà issue thuộc về (ví dụ Thịnh làm issue auth thì nhánh là `dbsec-thinh/...`).
+
+`<name>` là tên gọi của bạn viết thường, không dấu, không khoảng trắng:
+
+| Thành viên | `<name>` |
+|---|---|
+| Võ Thành Đạt | `dat` |
+| Lê Hồng Đăng | `dang` |
+| Võ Gia Minh | `minh` |
+| Trần Quyết Thắng | `thang` |
+| Lê Phan Đức Mân | `man` |
+| Nguyễn Quốc Thịnh | `thinh` |
 
 ---
 
@@ -39,7 +50,7 @@ Mỗi người dùng **mã role** của mình ở đầu tên nhánh và tiêu �
 - `uiux-thinh/7-upload-page`
 - `dbsec-thang/13-pdf-ingest`
 - `qa-dang/15-benchmark-20-cases`
-- `devops-vodat/17-branch-protection`
+- `devops-dat/17-branch-protection`
 
 ❌ **Sai (TUYỆT ĐỐI TRÁNH):**
 - `minh` (không có role, không có issue)
