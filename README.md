@@ -4,7 +4,8 @@ Group 04 Repository for CS252 Virtual Assistant project.
 
 ## Prerequisites
 
-- Python 3.10 or higher
+- Python 3.10 or higher for the command-line assistant
+- Node.js 24.22.1 LTS or a newer Node 24 LTS patch for the web interface
 - Git
 
 ## Setup
@@ -46,6 +47,20 @@ Or pass a single question directly:
 python -m assistant "where is the training office?"
 ```
 
+## Run the web interface
+
+The Pathly interface is a separate React application. From the repository root:
+
+```bash
+cd ui
+npm install
+npm run dev
+```
+
+Open the local URL printed by Vite, normally `http://127.0.0.1:5173`.
+See [`ui/README.md`](ui/README.md) for download instructions, supported platforms,
+production builds, troubleshooting, and prototype limitations.
+
 ## Test
 
 Run unit tests:
@@ -62,7 +77,7 @@ pytest tests/
 ├── scripts/            # Setup and utility scripts (check_env.py)
 ├── src/assistant/      # Application package and rule engine
 ├── tests/              # Test suite (smoke and unit tests)
-├── ui/                 # UI components
+├── ui/                 # React + TypeScript Pathly web interface
 ├── pyproject.toml      # Project configuration and metadata
 └── requirements.txt    # Python dependencies
 ```
