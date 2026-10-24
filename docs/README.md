@@ -1,3 +1,12 @@
 # docs/
 
-Project brief, blueprint, ADRs, reports and the team logbook go here.
+Thư mục tài liệu của dự án: kế hoạch, đặc tả, nhiệm vụ hằng tuần, quy tắc làm việc, ADR và báo cáo.
+
+| Thư mục | Nội dung |
+|---|---|
+| [roadmap/](roadmap/) | `PLAN.md` (kế hoạch 6 tuần), `APP_SPECIFICATION.md` (đặc tả chi tiết) |
+| [week1/](week1/README.md) | Nhiệm vụ tuần 1 theo role (UI/UX, AI, DB & Security, QA/QC, DevOps) |
+| [guidelines/](guidelines/README.md) | Quy tắc nhánh, Pull Request, commit |
+| [qa/reports/](qa/reports/) | Báo cáo QA hằng tuần (`python dev.py qa report --week N`) |
+| `adr/` | Architecture Decision Records (tạo từ tuần 1, issue #12 và #18) |
+| [schedule/](schedule/) | Lịch trình trình bày |
