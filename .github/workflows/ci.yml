@@ -36,3 +36,15 @@ jobs:
         run: |
           # Run tests if tests directory exists to avoid failures before tests are added
           if [ -d "tests" ]; then pytest tests/; else echo "No tests directory found yet. Skipping."; fi
+
+      - name: Scan for committed secrets
+        run: python dev.py db scan-secrets
+
+      - name: Validate benchmark file
+        run: python dev.py ai benchmark validate
+
+      - name: Check branch name (pull requests only)
+        if: github.event_name == 'pull_request'
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: python dev.py devops branch "$HEAD_REF"

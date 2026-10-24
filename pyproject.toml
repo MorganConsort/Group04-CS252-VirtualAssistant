@@ -8,6 +8,9 @@ version = "0.1.0"
 description = "CSC10014 Smart Virtual Assistant — starter"
 requires-python = ">=3.10"
 
+[project.scripts]
+devcli = "devcli.__main__:main"
+
 [tool.setuptools.packages.find]
 where = ["src"]
 

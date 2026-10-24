@@ -1,83 +1,122 @@
-# Study Assistant — starter
+# Study Companion — Group 04 (CS252 Virtual Assistant)
 
-Group 04 Repository for CS252 Virtual Assistant project.
+Trợ lý học tập AI cho **chính môn học bạn đang học**, từ THPT (K-12) đến đại học: thả slide bài giảng vào, ứng dụng biến chúng thành câu hỏi luyện tập có trích dẫn trang, lịch ôn tập hằng ngày và bản đồ kiến thức đã nắm vững, kèm một nhân vật đồng hành động viên bạn học.
 
-## Prerequisites
+## 📌 Tóm tắt ý tưởng (Improved idea)
 
-- Python 3.10 or higher for the command-line assistant
-- Node.js 24.22.1 LTS or a newer Node 24 LTS patch for the web interface
-- Git
+**Vấn đề.** Học sinh, sinh viên nhận slide mới mỗi tuần nhưng thường chỉ đọc lại vào đêm trước khi thi, cách học kém hiệu quả nhất và quên rất nhanh. Coursera bán nội dung của họ; chưa có công cụ tốt làm việc trên **nội dung giáo viên của bạn đã đưa**.
 
-## Setup
+**Giải pháp.**
+- **Slide → câu hỏi có trích dẫn**: AI đề xuất concept và câu hỏi; mỗi câu trỏ về đúng trang slide, không có nguồn thì không trả lời (*cite or refuse*).
+- **Ôn tập đúng lúc sắp quên**: lịch ôn theo thuật toán FSRS, buổi 10 phút gồm warm-up, core (xen kẽ chủ đề), wrap.
+- **Gợi ý thay vì đáp án**: hint ladder; bài được chấm điểm chỉ nhận gợi ý.
+- **Sửa lỗ hổng nền**: sai 2 lần thì quay lại concept tiên quyết.
+- **Companion 3 mode**: study buddy (mặc định, mọi lứa tuổi), mentor, và girlfriend mode **chỉ cho người dùng 18+ đã xác minh tự bật**; không nội dung tình dục; unlock theo mức độ nắm vững, không theo thời gian dùng app.
+- **Cho trường học (từ tuần 4)**: dashboard giáo viên, báo cáo phụ huynh, tài khoản K-12 an toàn.
 
-1. Create a virtual environment:
+**Nguyên tắc kỹ thuật.** Dùng giải pháp đơn giản nhất đủ dùng (*solution ladder*): graph, lịch ôn, chấm trắc nghiệm là thuật toán thường; LLM chỉ soạn câu hỏi, gợi ý và phản hồi, luôn có fallback.
+
+**Lộ trình.** 6 tuần xây phần mềm cho toàn bộ 7 phase của lộ trình startup 18 tháng; kết quả pilot, hợp đồng trường học và gọi vốn tiếp tục sau đó.
+
+| Tài liệu | Nội dung |
+|---|---|
+| [docs/roadmap/PLAN.md](docs/roadmap/PLAN.md) | Kế hoạch 6 tuần, việc theo 5 mảng mỗi tuần |
+| [docs/roadmap/APP_SPECIFICATION.md](docs/roadmap/APP_SPECIFICATION.md) | Đặc tả đầy đủ: use case, màn hình, kiến trúc, dữ liệu, API, AI, companion, bảo mật |
+| [docs/week1/](docs/week1/README.md) | Nhiệm vụ tuần 1 theo từng role |
+| [docs/guidelines/](docs/guidelines/README.md) | Quy tắc nhánh, PR, commit |
+
+## 👥 Team
+
+| Mảng | Mã role | Thành viên |
+|---|---|---|
+| UI/UX | `uiux` | Mân, Thịnh, Đạt |
+| AI implementation | `ai` | Minh, Thắng |
+| Database & Security | `dbsec` | Minh, Thắng, Võ Thành Đạt |
+| QA/QC | `qa` | Lê Hồng Đăng |
+| DevOps | `devops` | Lê Hồng Đăng, Võ Thành Đạt |
+| Leader / PM | `pm` | Võ Thành Đạt |
+
+## ⚙️ Cài đặt (Setup)
+
+Yêu cầu: Python 3.10+, Git; Node.js 24 nếu làm UI.
+
+1. Tạo môi trường ảo:
    ```bash
    python -m venv .venv
    ```
-
-2. Activate the virtual environment:
-   - **Windows (PowerShell):**
+2. Kích hoạt:
+   - **PowerShell (Windows):**
      ```powershell
      .\.venv\Scripts\Activate.ps1
      ```
-   - **Linux / macOS:**
+   - **Git Bash / Linux / macOS:**
      ```bash
      source .venv/bin/activate
      ```
-
-3. Install dependencies:
+3. Cài thư viện:
    ```bash
    pip install -r requirements.txt
    ```
-
-4. Verify your environment:
+4. Kiểm tra môi trường và cài git hook (bắt buộc, làm 1 lần):
    ```bash
-   python scripts/check_env.py
+   python dev.py devops check
+   python dev.py devops install-hooks
    ```
 
-## Run
+## 🧰 Dev CLI theo từng mảng
 
-Run the assistant interactively:
+Mọi lệnh chạy từ thư mục gốc repo, không cần cài thêm: `python dev.py <mảng> <lệnh>`. Xem đầy đủ: `python dev.py --help`, `python dev.py <mảng> --help`.
+
+| Mảng | Lệnh | Việc |
+|---|---|---|
+| UI/UX | `python dev.py ui install \| dev \| build \| test` | Chạy các script npm của frontend trong `ui/` |
+| AI | `python dev.py ai benchmark validate \| stats` | Kiểm tra / thống kê `eval/benchmark.jsonl` |
+| AI | `python dev.py ai chat "câu hỏi"` | Chạy trợ lý (bản rule-based hiện tại) |
+| Database & Security | `python dev.py db init [--reset]` | Tạo database SQLite cục bộ từ `db/schema.sql` |
+| Database & Security | `python dev.py db scan-secrets` | Tìm API key, token, private key trong repo |
+| QA/QC | `python dev.py qa test [-k từ_khóa]` | Chạy pytest |
+| QA/QC | `python dev.py qa lint` | Chạy ruff |
+| QA/QC | `python dev.py qa report --week N` | Tạo báo cáo QA tuần từ template |
+| DevOps | `python dev.py devops check` | Kiểm tra môi trường |
+| DevOps | `python dev.py devops ci` | Chạy toàn bộ kiểm tra như CI trước khi push |
+| DevOps | `python dev.py devops branch [tên]` | Kiểm tra tên nhánh |
+| DevOps | `python dev.py devops commit-msg "<msg>"` | Kiểm tra commit message |
+| DevOps | `python dev.py devops install-hooks` | Cài hook chặn commit sai cú pháp |
+
+## ▶️ Chạy trợ lý hiện tại
+
 ```bash
-python -m assistant
+python dev.py ai chat "where is the training office?"
 ```
 
-Or pass a single question directly:
-```bash
-python -m assistant "where is the training office?"
-```
-
-## Run the web interface
-
-The Pathly interface is a separate React application. From the repository root:
+## 🧪 Kiểm thử
 
 ```bash
-cd ui
-npm install
-npm run dev
+python dev.py qa test
+python dev.py devops ci
 ```
 
-Open the local URL printed by Vite, normally `http://127.0.0.1:5173`.
-See [`ui/README.md`](ui/README.md) for download instructions, supported platforms,
-production builds, troubleshooting, and prototype limitations.
-
-## Test
-
-Run unit tests:
-```bash
-pytest tests/
-```
-
-## Project Structure
+## 📂 Cấu trúc thư mục
 
 ```text
-├── .github/workflows/  # CI/CD workflows (linting, tests)
-├── data/               # Datasets and lookup tables (offices.csv)
-├── docs/               # Architecture documents, ADRs, logs
-├── scripts/            # Setup and utility scripts (check_env.py)
-├── src/assistant/      # Application package and rule engine
-├── tests/              # Test suite (smoke and unit tests)
-├── ui/                 # React + TypeScript Pathly web interface
-├── pyproject.toml      # Project configuration and metadata
-└── requirements.txt    # Python dependencies
+├── .github/              # CI (GitHub Actions), PR template
+├── data/                 # Dữ liệu và bảng tra cứu (không chứa dữ liệu cá nhân thật)
+├── db/schema.sql         # Schema database (SQLite local, Postgres staging)
+├── dev.py                # Điểm vào của Dev CLI
+├── docs/
+│   ├── guidelines/       # Quy tắc Git, PR, commit
+│   ├── roadmap/          # PLAN.md, APP_SPECIFICATION.md
+│   ├── week1/            # Nhiệm vụ tuần 1 theo role
+│   ├── qa/reports/       # Báo cáo QA hằng tuần
+│   └── schedule/         # Lịch trình trình bày
+├── eval/benchmark.jsonl  # Bộ benchmark chất lượng
+├── scripts/              # Script tiện ích (check_env.py)
+├── src/assistant/        # Trợ lý rule-based hiện tại
+├── src/devcli/           # Mã nguồn Dev CLI (ui, ai, db, qa, devops)
+├── tests/                # Test tự động
+└── ui/                   # Frontend (React + Vite, nhánh codex/pathly-ui)
 ```
+
+## 🌿 Đóng góp (Contributing)
+
+Issue → nhánh `<role>-<name>/<issue>-<task>` → commit `<type>(<scope>): <mô tả>` → `python dev.py devops ci` → PR `[<role>-<name>] ...` → 1 approve + CI xanh → squash merge. Chi tiết: [docs/guidelines/](docs/guidelines/README.md).
