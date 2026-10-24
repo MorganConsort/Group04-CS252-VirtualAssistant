@@ -1,1 +1,37 @@
-pytest==8.3.3
+# Thư viện của dự án. Cài: pip install -r requirements.txt (trong venv)
+# Phiên bản dùng "~=" (cho phép bản vá và bản nhỏ, không nhảy major).
+
+# --- Backend API (#13, #14) ---
+fastapi~=0.162
+uvicorn[standard]~=0.54
+pydantic~=2.14
+email-validator~=2.3      # kiểm tra email khi đăng ký (pydantic EmailStr)
+python-multipart~=0.0.32  # nhận file upload (UploadFile)
+python-dotenv~=1.2        # đọc .env (LLM_API_KEY, JWT_SECRET, DATABASE_URL)
+
+# --- Database & migration (#12) ---
+sqlalchemy~=2.1
+alembic~=1.20
+psycopg[binary]~=3.3      # driver Postgres cho Docker Compose và staging
+
+# --- Ingest PDF (#13) ---
+pypdf~=6.21
+
+# --- Security (#14) ---
+argon2-cffi~=25.1         # hash mật khẩu
+pyjwt~=2.15               # JWT đăng nhập
+
+# --- AI: retrieval và ôn tập (#11, tuần 2) ---
+rank-bm25~=0.2
+fsrs~=6.3                 # scheduler spaced repetition cho tuần 2
+
+# --- AI: LLM vendor (#8) ---
+# Chưa chốt vendor. Khi #8 chọn xong, bỏ dấu # ở đúng một dòng:
+# openai~=3.37
+# anthropic~=2.3
+# google-genai~=2.33
+
+# --- Test & lint (QA, DevOps) ---
+pytest~=9.1
+httpx2~=2.16              # FastAPI TestClient cần httpx2 (starlette 1.x)
+ruff~=0.17
