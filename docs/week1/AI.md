@@ -1,6 +1,6 @@
 # Tasks for AI implementation (Tuần 1: LLM Interface, Concept Extraction, Item Generation, BM25)
 
-Tài liệu này mô tả chi tiết nhiệm vụ tuần 1 của nhóm AI (Thắng, Minh): kiến trúc các module, định dạng dữ liệu, cách đánh giá và nơi ghi kết quả.
+Tài liệu này mô tả chi tiết nhiệm vụ tuần 1 của nhóm AI (Trần Quyết Thắng, Võ Gia Minh): kiến trúc các module, định dạng dữ liệu, cách đánh giá và nơi ghi kết quả.
 
 ## 🎯 Sứ mệnh tuần 1
 Biến text từng trang slide thành **concept** và **câu hỏi có trích dẫn trang**, với một module `llm` duy nhất để đổi vendor dễ dàng và test không tốn tiền.

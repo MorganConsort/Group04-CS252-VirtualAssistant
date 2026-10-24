@@ -18,16 +18,16 @@ Tài liệu này là kế hoạch triển khai chính thức của Group 04: tro
 | 5 | Mobile (PWA), thanh toán, lộ trình dài hạn | 5 | Cài lên điện thoại, thanh toán sandbox, placement test cắt bớt lộ trình | `v0.5` |
 | 6 | Mở rộng, bảo mật, ra mắt | 6 | Load test pass, pilot mở cho 50 sinh viên, pitch deck có số liệu đầu tiên | `v1.0` |
 
-**Phân công theo mảng** (theo lịch hiện có của team trong `docs/schedule/`):
+**Phân công theo mảng** (theo danh sách vai trò của lớp; DevOps giao cho hai Developer):
 
 | Mảng | Mã role | Người phụ trách |
 |---|---|---|
-| UI/UX | `uiux` | Mân, Thịnh, Đạt |
-| AI implementation | `ai` | Minh, Thắng |
-| Database & Security | `dbsec` | Minh, Thắng (hỗ trợ: Võ Thành Đạt) |
+| UI/UX | `uiux` | Lê Phan Đức Mân, Nguyễn Quốc Thịnh |
+| AI implementation | `ai` | Võ Gia Minh, Trần Quyết Thắng |
+| Database & Security | `dbsec` | Võ Gia Minh, Trần Quyết Thắng, Nguyễn Quốc Thịnh |
 | QA/QC | `qa` | Lê Hồng Đăng |
 | DevOps | `devops` | Lê Hồng Đăng, Võ Thành Đạt |
-| Leader / PM | `pm` | Võ Thành Đạt |
+| Leader / Presenter | `pm` | Võ Thành Đạt |
 
 **Nhịp tuần (Weekly rhythm):** Thứ Hai: PM mở milestone và issue của tuần · Hằng tối: standup 15 phút · Thứ Tư: merge giữa tuần, gỡ vướng · Thứ Sáu: demo, báo cáo QA, retro, tag release.
 

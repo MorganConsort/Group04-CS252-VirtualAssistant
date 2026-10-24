@@ -27,14 +27,16 @@ Trợ lý học tập AI cho **chính môn học bạn đang học**, từ THPT 
 
 ## 👥 Team
 
-| Mảng | Mã role | Thành viên |
-|---|---|---|
-| UI/UX | `uiux` | Mân, Thịnh, Đạt |
-| AI implementation | `ai` | Minh, Thắng |
-| Database & Security | `dbsec` | Minh, Thắng, Võ Thành Đạt |
-| QA/QC | `qa` | Lê Hồng Đăng |
-| DevOps | `devops` | Lê Hồng Đăng, Võ Thành Đạt |
-| Leader / PM | `pm` | Võ Thành Đạt |
+| MSSV | Họ tên | Vai trò (theo danh sách lớp) | Mã role trong repo | `<name>` cho nhánh |
+|---|---|---|---|---|
+| 25125052 | Võ Thành Đạt | Leader, Presenter, Developer | `pm`, `devops` | `dat` |
+| 25125040 | Lê Hồng Đăng | QA/QC, Developer | `qa`, `devops` | `dang` |
+| 25125030 | Võ Gia Minh | AI-Integration, Security & Data | `ai`, `dbsec` | `minh` |
+| 25125034 | Trần Quyết Thắng | AI-Integration, Security & Data | `ai`, `dbsec` | `thang` |
+| 25125026 | Lê Phan Đức Mân | UI/UX, Developer | `uiux` | `man` |
+| 25125066 | Nguyễn Quốc Thịnh | UI/UX, Security & Data | `uiux`, `dbsec` | `thinh` |
+
+DevOps không có trong danh sách vai trò của lớp; phần này giao cho hai Developer là Võ Thành Đạt và Lê Hồng Đăng.
 
 ## ⚙️ Cài đặt (Setup)
 
