@@ -28,7 +28,7 @@ def test_get_client_gemini(monkeypatch):
     monkeypatch.setenv("LLM_API_KEY", "test-key")
     monkeypatch.delenv("LLM_MODEL", raising=False)
     client = get_client()
-    assert isinstance(client, GeminiClient) and client.model == "gemini-2.5-flash"
+    assert isinstance(client, GeminiClient) and client.model == "gemini-3.8-flash"
 
 
 def test_get_client_unknown_provider(monkeypatch):
@@ -40,7 +40,7 @@ def test_get_client_unknown_provider(monkeypatch):
 
 def _gemini(monkeypatch, *outcomes):
     """GeminiClient whose vendor call returns/raises the given outcomes in order, no network."""
-    client = GeminiClient("test-key", "gemini-2.5-flash")
+    client = GeminiClient("test-key", "gemini-3.8-flash")
     pending = list(outcomes)
 
     def fake_generate(*args):
@@ -63,7 +63,7 @@ def test_gemini_bad_json_is_caught(monkeypatch):
 def test_gemini_retries_then_succeeds(monkeypatch):
     client = _gemini(monkeypatch, RetryableError("429"), RetryableError("429"), ('{"ok": 1}', 1_000_000, 0))
     result = client.complete("p", json_schema={"type": "object"})
-    assert result.text == '{"ok": 1}' and result.cost_usd == pytest.approx(0.30)
+    assert result.text == '{"ok": 1}' and result.cost_usd == pytest.approx(0.75)
 
 
 def test_gemini_gives_up_after_two_retries(monkeypatch):

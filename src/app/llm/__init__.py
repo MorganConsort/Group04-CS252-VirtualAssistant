@@ -6,7 +6,7 @@ import os
 from app.llm.base import LLMClient, LLMResult
 from app.llm.fake import FakeLLM
 
-DEFAULT_GEMINI_MODEL = "gemini-2.5-flash"
+DEFAULT_GEMINI_MODEL = "gemini-3.8-flash"
 
 __all__ = ["LLMClient", "LLMResult", "FakeLLM", "get_client"]
 

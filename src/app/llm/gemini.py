@@ -13,7 +13,7 @@ TIMEOUT_MS = 30_000
 RETRY_DELAYS = (1, 3)  # seconds before retry 1 and retry 2
 # USD per 1M tokens (input, output).
 # shortcut: unknown models log cost 0, add their price here when the team switches model.
-PRICES = {"gemini-2.5-flash": (0.30, 2.50)}
+PRICES = {"gemini-3.8-flash": (0.75, 3.75)}  # standard tier, Oct 2026
 
 
 class RetryableError(Exception):
@@ -78,4 +78,6 @@ class GeminiClient(LLMClient):
         except httpx.TransportError as e:
             raise RetryableError(f"Gemini network error: {type(e).__name__}") from e
         usage = resp.usage_metadata
-        return (resp.text or "", usage.prompt_token_count or 0, usage.candidates_token_count or 0)
+        # Thinking tokens are billed as output.
+        output_tokens = (usage.candidates_token_count or 0) + (usage.thoughts_token_count or 0)
+        return (resp.text or "", usage.prompt_token_count or 0, output_tokens)
