@@ -1,0 +1,1 @@
+"""Study Companion application package."""
