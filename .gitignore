@@ -26,3 +26,8 @@ dist/
 .DS_Store
 Thumbs.db
 data/local.db
+
+# Local secrets (template: .env.example)
+.env
+.env.*
+!.env.example

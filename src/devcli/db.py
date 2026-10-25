@@ -55,7 +55,7 @@ def _scan(args: argparse.Namespace) -> int:
         if not file.is_file() or file.suffix in {".png", ".jpg", ".pdf", ".db", ".svg"}:
             continue
         found = scan_text(file.read_text(encoding="utf-8", errors="ignore"))
-        if file.name == ".env" or file.name.startswith(".env."):
+        if file.name == ".env" or (file.name.startswith(".env.") and file.name != ".env.example"):
             found.append(".env file is tracked by git")
         for name in found:
             hits += 1
