@@ -9,10 +9,10 @@ in sync with Alembic migration ``0001_initial``.
 from __future__ import annotations
 
 import os
+from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 from threading import RLock
-from collections.abc import Iterator
 
 from sqlalchemy import create_engine, event, inspect
 from sqlalchemy.engine import Connection, Engine, make_url

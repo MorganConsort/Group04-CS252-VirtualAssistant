@@ -6,15 +6,17 @@ and staging/production use PostgreSQL without editing files:
     DATABASE_URL=sqlite:///./local.db alembic upgrade head
     DATABASE_URL=postgresql+psycopg://... alembic upgrade head
 """
+
 from __future__ import annotations
 
 import os
 from logging.config import fileConfig
 from pathlib import Path
 
-from alembic import context
 from sqlalchemy import create_engine, event, pool
 from sqlalchemy.engine import make_url
+
+from alembic import context
 
 config = context.config
 
