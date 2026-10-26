@@ -25,4 +25,13 @@ dist/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Local environment and databases (never commit secrets or real data)
+.env
+.env.*
+!.env.example
+local.db
+local.db-*
+*.sqlite
+*.sqlite3
 data/local.db

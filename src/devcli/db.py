@@ -1,15 +1,16 @@
 """Database and Security commands: local schema and a secret scan."""
+
 from __future__ import annotations
 
 import argparse
 import re
-import sqlite3
 import subprocess
 from pathlib import Path
 
+from app.db import get_database_url
+from app.db import init_db as init_database
 from devcli import ROOT
 
-SCHEMA = ROOT / "db" / "schema.sql"
 LOCAL_DB = ROOT / "data" / "local.db"
 
 SECRET_PATTERNS = {
@@ -21,13 +22,10 @@ SECRET_PATTERNS = {
 }
 
 
-def init_db(path: Path) -> list[str]:
+def init_db(path: Path, reset: bool = False) -> list[str]:
     """Create the schema in a SQLite file and return the table names."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with sqlite3.connect(path) as conn:
-        conn.executescript(SCHEMA.read_text(encoding="utf-8"))
-        rows = conn.execute("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name").fetchall()
-    return [r[0] for r in rows]
+    database_url = f"sqlite:///{Path(path).resolve().as_posix()}"
+    return init_database(reset=reset, database_url=database_url)
 
 
 def scan_text(text: str) -> list[str]:
@@ -36,31 +34,53 @@ def scan_text(text: str) -> list[str]:
 
 
 def tracked_files() -> list[Path]:
-    out = subprocess.run(["git", "ls-files"], cwd=ROOT, capture_output=True, text=True, check=False).stdout
+    out = subprocess.run(
+        ["git", "ls-files"], cwd=ROOT, capture_output=True, text=True, check=False
+    ).stdout
     return [ROOT / line for line in out.splitlines() if line]
 
 
 def _init(args: argparse.Namespace) -> int:
-    path = Path(args.db)
-    if args.reset and path.exists():
-        path.unlink()
-    tables = init_db(path)
-    print(f"[ OK ] {path}: {len(tables)} bảng ({', '.join(tables)})")
+    if args.db:
+        path = Path(args.db)
+        database_url = f"sqlite:///{path.resolve().as_posix()}"
+        label = path
+    else:
+        database_url = get_database_url()
+        label = database_url
+
+    tables = init_database(reset=args.reset, database_url=database_url)
+    print(f"[ OK ] {label}: {len(tables)} bảng ({', '.join(tables)})")
     return 0
 
 
 def _scan(args: argparse.Namespace) -> int:
     hits = 0
+    safe_env_examples = {".env.example", ".env.sample", ".env.template"}
     for file in tracked_files():
-        if not file.is_file() or file.suffix in {".png", ".jpg", ".pdf", ".db", ".svg"}:
+        if not file.is_file() or file.suffix in {
+            ".png",
+            ".jpg",
+            ".pdf",
+            ".db",
+            ".sqlite",
+            ".sqlite3",
+            ".svg",
+        }:
             continue
         found = scan_text(file.read_text(encoding="utf-8", errors="ignore"))
-        if file.name == ".env" or file.name.startswith(".env."):
+        if (
+            file.name == ".env" or file.name.startswith(".env.")
+        ) and file.name not in safe_env_examples:
             found.append(".env file is tracked by git")
         for name in found:
             hits += 1
             print(f"[FAIL] {file.relative_to(ROOT)}: {name}")
-    print("[ OK ] Không thấy secret trong các file git đang theo dõi." if not hits else f"{hits} vấn đề.")
+    print(
+        "[ OK ] Không thấy secret trong các file git đang theo dõi."
+        if not hits
+        else f"{hits} vấn đề."
+    )
     return 1 if hits else 0
 
 
@@ -68,10 +88,16 @@ def register(sub: argparse._SubParsersAction) -> None:
     p = sub.add_parser("db", help="Database & Security: schema cục bộ và quét secret")
     db_sub = p.add_subparsers(dest="db_command", required=True)
 
-    init = db_sub.add_parser("init", help="tạo database SQLite cục bộ từ db/schema.sql")
-    init.add_argument("--db", default=str(LOCAL_DB))
-    init.add_argument("--reset", action="store_true", help="xóa file database cũ trước khi tạo")
+    init = db_sub.add_parser(
+        "init", help="tạo database từ db/schema.sql (mặc định theo DATABASE_URL)"
+    )
+    init.add_argument("--db", help="ghi đè bằng một file SQLite cục bộ (tùy chọn)")
+    init.add_argument(
+        "--reset", action="store_true", help="xóa database cũ trước khi tạo"
+    )
     init.set_defaults(func=_init)
 
-    scan = db_sub.add_parser("scan-secrets", help="tìm API key, token, private key trong repo")
+    scan = db_sub.add_parser(
+        "scan-secrets", help="tìm API key, token, private key trong repo"
+    )
     scan.set_defaults(func=_scan)
