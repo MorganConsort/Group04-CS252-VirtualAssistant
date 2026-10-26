@@ -5,13 +5,14 @@ SQLite is used for local development and tests; PostgreSQL 16 is used in
 staging/production. The canonical schema lives in ``db/schema.sql`` and is kept
 in sync with Alembic migration ``0001_initial``.
 """
+
 from __future__ import annotations
 
 import os
 from contextlib import contextmanager
 from pathlib import Path
 from threading import RLock
-from typing import Iterator
+from collections.abc import Iterator
 
 from sqlalchemy import create_engine, event, inspect
 from sqlalchemy.engine import Connection, Engine, make_url
@@ -112,7 +113,9 @@ def get_sessionmaker(database_url: str | Path | None = None) -> sessionmaker[Ses
         factory = _SESSION_FACTORIES.get(url)
         if factory is not None:
             return factory
-        factory = sessionmaker(bind=get_engine(url), expire_on_commit=False, future=True)
+        factory = sessionmaker(
+            bind=get_engine(url), expire_on_commit=False, future=True
+        )
         _SESSION_FACTORIES[url] = factory
         return factory
 
@@ -154,7 +157,11 @@ def _sql_statements(sql: str) -> list[str]:
     for line in sql.splitlines():
         code, _, _comment = line.partition("--")
         lines.append(code)
-    return [statement.strip() for statement in "\n".join(lines).split(";") if statement.strip()]
+    return [
+        statement.strip()
+        for statement in "\n".join(lines).split(";")
+        if statement.strip()
+    ]
 
 
 def _drop_all(engine: Engine) -> None:
