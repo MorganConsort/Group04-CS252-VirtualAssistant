@@ -16,6 +16,7 @@ import {
 } from "./model";
 import { currentCourse } from "./api/mock";
 import { AuthScreen } from "./components/AuthScreen";
+import { CoursesPage } from "./pages/CoursesPage";
 
 type Page =
   | "Home"
@@ -40,9 +41,9 @@ const pages: Page[] = [
 ];
 // The spec's 5 nav items (docs/week1/UIUX.md), mapped onto Pathly's pages; Home stays on the logo.
 const nav: { page: Page; label: string; icon: string }[] = [
-  { page: "Library", label: "Môn học", icon: "▣" },
-  { page: "Schedule", label: "Ôn tập", icon: "▤" },
-  { page: "AI Reporter", label: "Hỏi đáp", icon: "✦" },
+  { page: "Library", label: "Courses", icon: "▣" },
+  { page: "Schedule", label: "Review", icon: "▤" },
+  { page: "AI Reporter", label: "Ask", icon: "✦" },
   { page: "Progress", label: "Mastery", icon: "◉" },
   { page: "Companion", label: "Companion", icon: "♥" },
 ];
@@ -315,7 +316,7 @@ export default function App() {
     Schedule: "Your learning schedule",
     Progress: `${activeCourse.name} · Course progress`,
     "AI Reporter": "AI learning assistant",
-    Library: "Explore the learning library",
+    Library: `Courses · ${currentCourse.name}`,
     Companion: "Companion",
   }[page];
   const subtitle = {
@@ -326,8 +327,8 @@ export default function App() {
     "AI Reporter":
       "Ask questions, report difficulties, and reshape your plan together.",
     Library:
-      "Choose a curated module. Your AI coach checks prerequisites before enrollment.",
-    Companion: "Người bạn đồng hành khi ôn tập. Sẽ hoàn thiện ở tuần 3.",
+      "Upload your slides, confirm the concepts, then add modules from the sample library.",
+    Companion: "Your study buddy while you review. Coming in week 3.",
   }[page];
   const start = addDays(anchor, -((anchor.getDay() + 6) % 7));
   const calendarDays =
@@ -800,6 +801,8 @@ export default function App() {
         )}
         {page === "Library" && (
           <>
+            <CoursesPage courseId={currentCourse.id} />
+            <h2 className="section-title">Sample library</h2>
             <input
               className="search"
               aria-label="Search modules"
@@ -1164,18 +1167,18 @@ export default function App() {
         )}
         {page === "Companion" && (
           <section className="card companion">
-            <h2>Chọn mode</h2>
+            <h2>Choose a mode</h2>
             <ul>
-              <li>Buddy · đang dùng</li>
+              <li>Buddy · active</li>
               <li>Mentor</li>
               <li aria-disabled="true">
-                🔒 Girlfriend · Chỉ dành cho người dùng 18+ đã xác minh
+                🔒 Girlfriend · Verified 18+ users only
               </li>
             </ul>
           </section>
         )}
       </main>
-      <nav className="bottom-nav" aria-label="Điều hướng chính">
+      <nav className="bottom-nav" aria-label="Main navigation (mobile)">
         {nav.map(({ page: p, label, icon }) => (
           <button
             key={p}

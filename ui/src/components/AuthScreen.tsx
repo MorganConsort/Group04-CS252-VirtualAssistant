@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { authenticate } from "../api/mock";
 import { validateAuth, type AuthErrors, type AuthForm } from "../auth";
 
-/** S1 Đăng nhập / Đăng ký. The token goes to the caller, which keeps it in memory only. */
+/** S1 Sign in / Register. The token goes to the caller, which keeps it in memory only. */
 export function AuthScreen({ onAuth }: { onAuth: (token: string) => void }) {
   const [mode, setMode] = useState<"login" | "register">("login");
   const [form, setForm] = useState<AuthForm>({
@@ -27,7 +27,7 @@ export function AuthScreen({ onAuth }: { onAuth: (token: string) => void }) {
     try {
       onAuth((await authenticate(form, mode)).token);
     } catch (err) {
-      setFailure(err instanceof Error ? err.message : "Đăng nhập thất bại.");
+      setFailure(err instanceof Error ? err.message : "Sign-in failed.");
     } finally {
       setBusy(false);
     }
@@ -70,20 +70,20 @@ export function AuthScreen({ onAuth }: { onAuth: (token: string) => void }) {
         <div className="brand auth-brand">
           <span>✦</span> pathly
         </div>
-        <h1>{mode === "login" ? "Đăng nhập" : "Tạo tài khoản"}</h1>
+        <h1>{mode === "login" ? "Sign in" : "Create account"}</h1>
         {field("email", "Email", "email")}
-        {field("password", "Mật khẩu", "password")}
+        {field("password", "Password", "password")}
         {mode === "register" && (
           <>
-            {field("birthYear", "Năm sinh", "number")}
+            {field("birthYear", "Birth year", "number")}
             <label className="auth-field">
-              Cấp học
+              Education level
               <select
                 value={form.level}
                 onChange={(e) => set("level", e.target.value)}
               >
-                <option value="university">Đại học</option>
-                <option value="k12">Phổ thông (K-12)</option>
+                <option value="university">University</option>
+                <option value="k12">School (K-12)</option>
               </select>
             </label>
           </>
@@ -94,7 +94,7 @@ export function AuthScreen({ onAuth }: { onAuth: (token: string) => void }) {
           </p>
         )}
         <button className="auth-submit" type="submit" disabled={busy}>
-          {busy ? "Đang xử lý…" : mode === "login" ? "Đăng nhập" : "Đăng ký"}
+          {busy ? "Working…" : mode === "login" ? "Sign in" : "Register"}
         </button>
         <button
           type="button"
@@ -106,8 +106,8 @@ export function AuthScreen({ onAuth }: { onAuth: (token: string) => void }) {
           }}
         >
           {mode === "login"
-            ? "Chưa có tài khoản? Đăng ký"
-            : "Đã có tài khoản? Đăng nhập"}
+            ? "No account yet? Register"
+            : "Already have an account? Sign in"}
         </button>
       </form>
     </main>

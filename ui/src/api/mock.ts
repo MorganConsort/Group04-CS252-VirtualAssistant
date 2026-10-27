@@ -14,6 +14,6 @@ export async function authenticate(
 ): Promise<{ token: string }> {
   await delay(400);
   if (Object.keys(validateAuth(form, mode)).length)
-    throw new Error("Thông tin chưa hợp lệ.");
+    throw new Error("Please fix the highlighted fields.");
   return { token: `mock-${mode}-${Date.now()}` };
 }
