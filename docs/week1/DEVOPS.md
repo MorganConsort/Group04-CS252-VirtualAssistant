@@ -81,10 +81,23 @@ Lỡ commit secret: **thu hồi key ở nhà cung cấp trước**, báo DevOps,
 
 | Hạng mục | Kết quả |
 |---|---|
-| Thành viên đã cài hook | _.../6_ |
+| Thành viên đã cài hook | _1/6_ (xem bảng dưới) |
 | URL staging UI | _..._ |
 | URL staging API | _..._ |
 | Thời gian từ merge đến staging cập nhật | _... phút_ |
+
+### Ai đã cài hook (#17)
+
+Cách cài: `python dev.py devops install-hooks`. Kiểm tra: `git commit --allow-empty -m "update code"` phải bị chặn với `[FAIL]`. Cài xong thì tự sửa dòng của mình trong PR tiếp theo.
+
+| Thành viên | Đã cài | Ngày |
+|---|---|---|
+| Võ Thành Đạt | ✅ | 2026-10-25 |
+| Lê Hồng Đăng | ⬜ | |
+| Võ Gia Minh | ⬜ | |
+| Trần Quyết Thắng | ⬜ | |
+| Lê Phan Đức Mân | ⬜ | |
+| Nguyễn Quốc Thịnh | ⬜ | |
 
 ## 🌿 Git Workflow & Branching
 - Nhánh: `devops-<name>/<issue>-<task>`, ví dụ `devops-dat/17-git-workflow`, `devops-dang/18-compose-staging`.
