@@ -35,3 +35,8 @@ local.db-*
 *.sqlite
 *.sqlite3
 data/local.db
+
+# Local secrets (template: .env.example)
+.env
+.env.*
+!.env.example

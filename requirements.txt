@@ -26,10 +26,10 @@ rank-bm25~=0.2
 fsrs~=6.3                 # scheduler spaced repetition cho tuần 2
 
 # --- AI: LLM vendor (#8) ---
-# Chưa chốt vendor. Khi #8 chọn xong, bỏ dấu # ở đúng một dòng:
+# #8 chọn Gemini. Đổi vendor: viết adapter mới trong src/app/llm/ và đổi dòng dưới.
 # openai~=3.37
 # anthropic~=2.3
-# google-genai~=2.33
+google-genai~=2.33
 
 # --- Test & lint (QA, DevOps) ---
 pytest~=9.1
