@@ -69,7 +69,6 @@ def _scan(args: argparse.Namespace) -> int:
         }:
             continue
         found = scan_text(file.read_text(encoding="utf-8", errors="ignore"))
-        if file.name == ".env" or (file.name.startswith(".env.") and file.name != ".env.example"):
         if (
             file.name == ".env" or file.name.startswith(".env.")
         ) and file.name not in safe_env_examples:
