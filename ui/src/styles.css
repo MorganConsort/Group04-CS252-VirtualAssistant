@@ -1,12 +1,64 @@
+/* Design tokens (docs/week1/UIUX.md). New components use only these. */
 :root {
-  font-family: Inter, Arial, sans-serif;
-  color: #182439;
-  background: #f6f8fc;
+  --color-primary: #6654d9;
+  --color-primary-ink: #5a48cf;
+  --color-on-primary: #ffffff;
+  --color-bg: #f6f8fc;
+  --color-surface: #ffffff;
+  --color-surface-alt: #f8fafd;
+  --color-text: #182439;
+  --color-muted: #66748a;
+  --color-line: #e6eaf2;
+  --color-tint: #f0edff;
+  --color-success: #13805c;
+  --color-success-bg: #e5f8ef;
+  --color-warning-bg: #fff4dc;
+  --color-warning-ink: #845a22;
+  --color-danger: #c0392b;
+  --color-danger-bg: #fdecea;
+  --color-companion: #d9548f;
+  --font-body: Inter, Arial, sans-serif;
+  --text-sm: 14px;
+  --text-md: 16px;
+  --text-lg: 20px;
+  --text-xl: 24px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  /* Pathly's original names, kept as aliases so existing styles still work. */
+  --purple: var(--color-primary);
+  --muted: var(--color-muted);
+  --line: var(--color-line);
+  --tint: var(--color-tint);
+  font-family: var(--font-body);
+  color: var(--color-text);
+  background: var(--color-bg);
   font-synthesis: none;
-  --purple: #6654d9;
-  --muted: #748298;
-  --line: #e6eaf2;
-  --tint: #f0edff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-primary-ink: #b3a9ff;
+    --color-bg: #0f1626;
+    --color-surface: #182238;
+    --color-surface-alt: #1e2a44;
+    --color-text: #e8edf7;
+    --color-muted: #a3b0c7;
+    --color-line: #2c3956;
+    --color-tint: #2a2950;
+    --color-success: #4fd1a1;
+    --color-success-bg: #123a2e;
+    --color-warning-bg: #3d3018;
+    --color-warning-ink: #f2c27a;
+    --color-danger: #ff8a7a;
+    --color-danger-bg: #3e1d1d;
+    --color-companion: #f08cb8;
+  }
 }
 * {
   box-sizing: border-box;
@@ -248,7 +300,7 @@ main {
 }
 .card {
   border: 1px solid var(--line);
-  background: white;
+  background: var(--color-surface);
   border-radius: 18px;
   padding: 24px;
 }
@@ -277,12 +329,12 @@ main {
   place-items: center;
   border-radius: 18px;
   background: var(--tint);
-  color: var(--purple);
+  color: var(--color-primary-ink);
   font-size: 29px;
   flex-shrink: 0;
 }
 .button {
-  color: var(--purple);
+  color: var(--color-primary-ink);
   background: var(--tint);
   border-radius: 12px;
   padding: 9px 16px;
@@ -347,7 +399,7 @@ main {
 .pill {
   font-size: 12px;
   font-weight: 600;
-  color: var(--purple);
+  color: var(--color-primary-ink);
   background: var(--tint);
   padding: 8px 12px;
   border-radius: 20px;
@@ -356,21 +408,21 @@ main {
   line-height: 1.1;
 }
 .green {
-  background: #e5f8ef !important;
-  color: #1b9a70 !important;
+  background: var(--color-success-bg) !important;
+  color: var(--color-success) !important;
 }
 .amber,
 .amber .pill {
-  background: #fff4dc;
+  background: var(--color-warning-bg);
   color: #bc7f2d;
 }
 .session.amber {
-  background: white;
+  background: var(--color-surface);
   color: inherit;
 }
 .neutral {
-  background: #f6f8fc;
-  color: #182439;
+  background: var(--color-bg);
+  color: var(--color-text);
 }
 .metric-line {
   display: flex;
@@ -380,7 +432,7 @@ main {
 }
 .metric-line strong {
   font-size: 47px;
-  color: var(--purple);
+  color: var(--color-primary-ink);
 }
 .metric-line span {
   font-size: 13px;
@@ -456,9 +508,9 @@ main {
 select,
 input,
 textarea {
-  background: white;
+  background: var(--color-surface);
   border: 1px solid var(--line);
-  color: #182439;
+  color: var(--color-text);
   border-radius: 10px;
   padding: 11px 14px;
   min-width: 0;
@@ -477,7 +529,7 @@ select {
 .day {
   border: 1px solid var(--line);
   border-radius: 12px;
-  background: white;
+  background: var(--color-surface);
   min-height: 465px;
   padding: 16px 9px;
 }
@@ -487,11 +539,11 @@ select {
   margin: 0 10px 35px;
 }
 .day.today {
-  background: #faf9ff;
+  background: var(--color-surface-alt);
   border-color: #cec5ff;
 }
 .day.today h3 {
-  color: var(--purple);
+  color: var(--color-primary-ink);
 }
 .calendar-event {
   display: flex;
@@ -501,7 +553,7 @@ select {
   border-radius: 10px;
   padding: 14px 11px;
   background: var(--tint);
-  color: var(--purple);
+  color: var(--color-primary-ink);
   width: 100%;
   margin-bottom: 30px;
   min-height: 104px;
@@ -548,7 +600,7 @@ select {
 .big-number {
   display: block;
   font-size: 60px;
-  color: var(--purple);
+  color: var(--color-primary-ink);
   margin: 20px 0;
 }
 .progress-summary p {
@@ -562,7 +614,7 @@ select {
 }
 .stats strong {
   font-size: 38px;
-  color: var(--purple);
+  color: var(--color-primary-ink);
 }
 .stats p {
   font-size: 12px;
@@ -589,7 +641,7 @@ select {
   width: 54px;
   height: 54px;
   background: var(--tint);
-  color: var(--purple);
+  color: var(--color-primary-ink);
   font-size: 20px;
   font-weight: 600;
   display: grid;
@@ -614,13 +666,13 @@ select {
 .text-button {
   border-radius: 20px;
   padding: 9px 15px;
-  background: white;
+  background: var(--color-surface);
   font-size: 12px;
-  color: #182439;
+  color: var(--color-text);
 }
 .filters button.selected,
 .text-button.selected {
-  color: var(--purple);
+  color: var(--color-primary-ink);
   background: var(--tint);
 }
 .course-heading {
@@ -701,7 +753,7 @@ select {
   padding: 18px 20px;
   border-radius: 16px;
   max-width: 92%;
-  background: #f8fafd;
+  background: var(--color-surface-alt);
   font-size: 14px;
 }
 .message b {
@@ -718,7 +770,7 @@ select {
   max-width: 80%;
 }
 .message.user p {
-  color: #182439;
+  color: var(--color-text);
   margin: 0;
 }
 .suggestions {
@@ -732,7 +784,7 @@ select {
 .chat-input {
   display: flex;
   align-items: center;
-  background: #f6f8fc;
+  background: var(--color-bg);
   border-radius: 12px;
   padding: 7px;
   gap: 8px;
@@ -775,7 +827,7 @@ select {
   border-radius: 15px;
   padding: 20px;
   width: 100%;
-  background: white;
+  background: var(--color-surface);
 }
 .proposal h3 {
   font-size: 18px;
@@ -809,8 +861,8 @@ select {
 .warning {
   padding: 15px;
   border-radius: 12px;
-  background: #fff4dc;
-  color: #845a22;
+  background: var(--color-warning-bg);
+  color: var(--color-warning-ink);
   font-size: 13px;
   line-height: 1.5;
   margin: 12px 0;
@@ -848,7 +900,7 @@ dialog {
   padding: 28px;
   width: min(620px, calc(100vw - 32px));
   max-height: 88vh;
-  color: #182439;
+  color: var(--color-text);
 }
 dialog::backdrop {
   background: #18243970;
@@ -889,10 +941,10 @@ legend {
   font-size: 14px;
 }
 .answer input {
-  accent-color: var(--purple);
+  accent-color: var(--color-primary-ink);
 }
 .lesson-note {
-  background: #f6f8fc;
+  background: var(--color-bg);
   padding: 18px;
   border-radius: 14px;
   margin: 22px 0;
@@ -917,7 +969,7 @@ legend {
   position: fixed;
   top: -60px;
   left: 15px;
-  background: white;
+  background: var(--color-surface);
   padding: 15px;
   z-index: 200;
 }
@@ -1102,5 +1154,122 @@ legend {
   }
   .stats strong {
     font-size: 30px;
+  }
+}
+/* Shell additions for #6: token-only. */
+.course-name {
+  font-size: var(--text-sm);
+  color: var(--color-text);
+}
+.bottom-nav {
+  display: none;
+}
+.companion ul {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+.companion li {
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+}
+.companion li[aria-disabled="true"] {
+  color: var(--color-muted);
+}
+.auth {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+  background: var(--color-bg);
+}
+.auth-card {
+  width: min(400px, 100%);
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-lg);
+}
+.auth-brand {
+  color: var(--color-primary-ink);
+}
+.auth-card h1 {
+  font-size: var(--text-xl);
+  margin: 0;
+}
+.auth-field {
+  display: grid;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+.auth-field input,
+.auth-field select {
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  font-size: var(--text-md);
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+}
+.auth-field input[aria-invalid="true"] {
+  border-color: var(--color-danger);
+}
+.auth-error {
+  color: var(--color-danger);
+  font-size: var(--text-sm);
+  font-weight: 400;
+  margin: 0;
+}
+.auth-submit,
+.auth-switch {
+  border: 0;
+  min-height: 44px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-md);
+}
+.auth-submit {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-weight: 600;
+}
+.auth-switch {
+  background: transparent;
+  color: var(--color-primary-ink);
+}
+@media (max-width: 760px) {
+  main {
+    padding-bottom: 88px;
+  }
+  .topbar > span {
+    display: none;
+  }
+  .bottom-nav {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 9;
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-line);
+  }
+  .bottom-nav button {
+    border: 0;
+    min-height: 56px;
+    display: grid;
+    place-items: center;
+    gap: 2px;
+    font-size: 11px;
+    background: transparent;
+    color: var(--color-muted);
+  }
+  .bottom-nav button[aria-current="page"] {
+    color: var(--color-primary-ink);
+    font-weight: 600;
   }
 }

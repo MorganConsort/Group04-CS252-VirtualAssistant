@@ -14,8 +14,16 @@ import {
   verifiedCount,
   type Session,
 } from "./model";
+import { currentCourse } from "./api/mock";
+import { AuthScreen } from "./components/AuthScreen";
 
-type Page = "Home" | "Schedule" | "Progress" | "AI Reporter" | "Library";
+type Page =
+  | "Home"
+  | "Schedule"
+  | "Progress"
+  | "AI Reporter"
+  | "Library"
+  | "Companion";
 type Proposal = {
   kind: "enroll" | "balance";
   courseId?: string;
@@ -28,8 +36,16 @@ const pages: Page[] = [
   "Progress",
   "AI Reporter",
   "Library",
+  "Companion",
 ];
-const icons = ["▦", "▤", "◉", "✦", "▣"];
+// The spec's 5 nav items (docs/week1/UIUX.md), mapped onto Pathly's pages; Home stays on the logo.
+const nav: { page: Page; label: string; icon: string }[] = [
+  { page: "Library", label: "Môn học", icon: "▣" },
+  { page: "Schedule", label: "Ôn tập", icon: "▤" },
+  { page: "AI Reporter", label: "Hỏi đáp", icon: "✦" },
+  { page: "Progress", label: "Mastery", icon: "◉" },
+  { page: "Companion", label: "Companion", icon: "♥" },
+];
 const courseFor = (id: string) => courses.find((c) => c.id === id)!;
 const formatted = (d: Date) =>
   d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -104,6 +120,8 @@ function Modal({
   );
 }
 export default function App() {
+  // Kept in memory only: a reload logs out until real tokens exist (#6).
+  const [token, setToken] = useState<string | null>(null);
   const [state, setState] = useState(readState);
   const [page, setPage] = useState<Page>(
     () =>
@@ -298,6 +316,7 @@ export default function App() {
     Progress: `${activeCourse.name} · Course progress`,
     "AI Reporter": "AI learning assistant",
     Library: "Explore the learning library",
+    Companion: "Companion",
   }[page];
   const subtitle = {
     Home: "One step at a time. Here's your learning plan for today.",
@@ -308,6 +327,7 @@ export default function App() {
       "Ask questions, report difficulties, and reshape your plan together.",
     Library:
       "Choose a curated module. Your AI coach checks prerequisites before enrollment.",
+    Companion: "Người bạn đồng hành khi ôn tập. Sẽ hoàn thiện ở tuần 3.",
   }[page];
   const start = addDays(anchor, -((anchor.getDay() + 6) % 7));
   const calendarDays =
@@ -380,6 +400,7 @@ export default function App() {
             explanation: "A passing check is required.",
           },
         ];
+  if (!token) return <AuthScreen onAuth={setToken} />;
   return (
     <div className="app">
       <a className="skip" href="#main">
@@ -391,15 +412,15 @@ export default function App() {
         </a>
         <div className="workspace-label">YOUR WORKSPACE</div>
         <nav aria-label="Main navigation">
-          {pages.map((p, i) => (
+          {nav.map(({ page: p, label, icon }) => (
             <button
               key={p}
               aria-current={page === p ? "page" : undefined}
               className={page === p ? "active" : ""}
               onClick={() => go(p)}
             >
-              <span>{icons[i]}</span>
-              {p}
+              <span>{icon}</span>
+              {label}
             </button>
           ))}
         </nav>
@@ -452,6 +473,7 @@ export default function App() {
           >
             ☰
           </button>
+          <strong className="course-name">{currentCourse.name}</strong>
           <span>
             {today().toLocaleDateString("en-US", {
               weekday: "long",
@@ -1140,7 +1162,31 @@ export default function App() {
             </aside>
           </div>
         )}
+        {page === "Companion" && (
+          <section className="card companion">
+            <h2>Chọn mode</h2>
+            <ul>
+              <li>Buddy · đang dùng</li>
+              <li>Mentor</li>
+              <li aria-disabled="true">
+                🔒 Girlfriend · Chỉ dành cho người dùng 18+ đã xác minh
+              </li>
+            </ul>
+          </section>
+        )}
       </main>
+      <nav className="bottom-nav" aria-label="Điều hướng chính">
+        {nav.map(({ page: p, label, icon }) => (
+          <button
+            key={p}
+            aria-current={page === p ? "page" : undefined}
+            onClick={() => go(p)}
+          >
+            <span aria-hidden="true">{icon}</span>
+            {label}
+          </button>
+        ))}
+      </nav>
       {notice && (
         <div className="toast" role="status">
           ✓ {notice}
