@@ -45,6 +45,12 @@
   --gradient-aurora:
     radial-gradient(55% 45% at 12% 8%, #6654d940 0%, transparent 70%),
     radial-gradient(50% 45% at 92% 95%, #d9548f33 0%, transparent 70%);
+  /* Motion (Material 3 curves): decelerate for entering, standard for state changes. */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --duration-fast: 150ms;
+  --duration-base: 220ms;
+  --duration-slow: 320ms;
   color-scheme: light dark;
   --font-body: Inter, Arial, sans-serif;
   --text-sm: 14px;
@@ -137,10 +143,48 @@ textarea:focus-visible {
   outline: 3px solid var(--color-focus);
   outline-offset: 3px;
 }
-button {
-  transition:
-    background 0.15s,
-    transform 0.15s;
+button,
+input,
+select,
+textarea {
+  transition-property: background-color, border-color, color, box-shadow, filter, transform;
+  transition-duration: var(--duration-fast);
+  transition-timing-function: var(--ease-standard);
+}
+/* Entrances animate only opacity/transform so they stay on the compositor. */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.97);
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 12px);
+  }
+}
+/* Page sections mount fresh on navigation, so this plays once per page switch. */
+main > .page-heading,
+main > .page-heading ~ * {
+  animation: fade-up var(--duration-slow) var(--ease-decelerate) backwards;
+}
+dialog[open] {
+  animation: pop-in var(--duration-base) var(--ease-decelerate);
+}
+dialog[open]::backdrop {
+  animation: fade-in var(--duration-base) var(--ease-standard);
 }
 button:hover:not(:disabled) {
   filter: brightness(0.96);
@@ -533,7 +577,7 @@ main {
   background: var(--gradient-brand);
   display: block;
   border-radius: 9px;
-  transition: width 0.4s;
+  transition: width var(--duration-slow) var(--ease-standard);
 }
 .overview b {
   font-size: 15px;
@@ -973,7 +1017,7 @@ select {
   border-radius: 14px;
   z-index: 100;
   box-shadow: var(--shadow-md);
-  border-left: 4px solid var(--color-nav-accent);
+  animation: toast-in var(--duration-base) var(--ease-decelerate);
   font-size: 14px;
   max-width: 90vw;
 }
@@ -1116,7 +1160,10 @@ legend {
   }
   .sidebar {
     transform: translateX(-100%);
-    transition: transform 0.2s;
+    /* visibility is transitioned too, otherwise the drawer vanishes before it slides out. */
+    transition:
+      transform var(--duration-base) var(--ease-standard),
+      visibility var(--duration-base);
     width: 246px;
     visibility: hidden;
     pointer-events: none;
@@ -1274,24 +1321,14 @@ legend {
   background: var(--gradient-aurora), var(--color-bg);
 }
 .auth-card {
-  position: relative;
-  overflow: hidden;
   width: min(400px, 100%);
   display: grid;
   gap: var(--space-4);
   padding: var(--space-6);
-  padding-top: calc(var(--space-6) + 4px);
   background: var(--color-surface);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
-}
-.auth-card::before {
-  content: "";
-  position: absolute;
-  inset: 0 0 auto;
-  height: 4px;
-  background: var(--gradient-brand);
 }
 .auth-brand {
   color: var(--color-primary-ink);
@@ -1365,13 +1402,14 @@ legend {
     place-items: center;
     gap: 2px;
     font-size: 11px;
-    background: transparent;
+    background: var(--gradient-brand) top center / 0 3px no-repeat;
+    transition: background-size var(--duration-base) var(--ease-standard);
     color: var(--color-muted);
   }
   .bottom-nav button[aria-current="page"] {
     color: var(--color-primary-ink);
     font-weight: 600;
-    background: var(--gradient-brand) top center / 40% 3px no-repeat;
+    background-size: 40% 3px;
   }
 }
 /* Upload + Concept editor for #7: token-only. */
@@ -1393,6 +1431,7 @@ legend {
   border: 2px dashed var(--color-line);
   border-radius: var(--radius-lg);
   background: var(--color-surface-alt);
+  transition: border-color var(--duration-base) var(--ease-standard);
 }
 .dropzone.dragging {
   border-color: var(--color-primary);
@@ -1419,6 +1458,12 @@ legend {
 .secondary-action:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+}
+/* New, restored (undo) and merged rows ease in; confirming fades the border. */
+.file-list li,
+.concept-list li {
+  animation: fade-up var(--duration-base) var(--ease-decelerate) backwards;
+  transition: border-color var(--duration-base) var(--ease-standard);
 }
 .file-list,
 .concept-list {
