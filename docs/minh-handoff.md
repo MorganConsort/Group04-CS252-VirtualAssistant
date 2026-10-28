@@ -40,7 +40,7 @@ npm run dev
 
 Vào `http://127.0.0.1:5173/#workspace`, tạo tài khoản rồi dùng Planner → Team → Companion. `scripts/start_backend.cmd` dùng Python trong `.venv`, không cần đổi execution policy của PowerShell. Nếu dùng lệnh `python` báo không tìm thấy Python, cài Python thật và mở terminal mới.
 
-Backend mặc định dùng SQLite `pathly.db`, tự tạo schema lần đầu. Các phiên bản schema tiếp theo cần migration; `create_all()` không nâng cấp bảng đã tồn tại. File DB và `.env` được ignore. Không có tài khoản demo cố định hay password/API key thật trong repository.
+Backend dùng chung `DATABASE_URL` với Alembic và dev CLI (mặc định SQLite `local.db`) và chạy `alembic upgrade head` khi khởi động. Đổi schema = thêm migration mới và cập nhật `db/schema.sql`; `tests/test_schema_sync.py` kiểm tra migration, `schema.sql` và model ORM khớp nhau. File DB và `.env` được ignore. Không có tài khoản demo cố định hay password/API key thật trong repository.
 
 Các trang Home/Schedule/Progress/Library/AI Reporter là bản demo khóa học có sẵn, lưu `pathly.demo.v1` trong localStorage. Workspace dùng dữ liệu API riêng; chưa chuyển tự động dữ liệu demo sang tài khoản. Session Workspace nằm trong sessionStorage của tab; đăng xuất thu hồi token ở server.
 
@@ -56,7 +56,7 @@ Copy-Item .env.example .env
 Sửa `.env`, dùng thông tin database của mình:
 
 ```dotenv
-PATHLY_DATABASE_URL=postgresql+psycopg://pathly:YOUR_PASSWORD@localhost:5432/pathly
+DATABASE_URL=postgresql+psycopg://pathly:YOUR_PASSWORD@localhost:5432/pathly
 ```
 
 Khởi động lại backend. Cả SQLite và PostgreSQL dùng cùng schema và API. Dữ liệu thời gian được chuẩn hóa về UTC; cách dùng dialect/driver tham khảo [SQLAlchemy PostgreSQL](https://docs.sqlalchemy.org/en/20/dialects/postgresql.html).
@@ -78,7 +78,7 @@ Mỗi test tạo schema `pathly_test_<uuid>` rồi dọn đúng schema đó. Khi
 4. Save this plan: lưu các phiên vào calendar.
 5. Khi phiên bắt đầu, check-in số phút thực học hoặc đánh dấu missed. Gửi lại cùng check-in không cộng điểm lần hai; thay kết quả đã chốt trả 409.
 6. Preview/Replan: sắp lại phần việc chưa học trong khoảng được chọn. Phiên đã quá giờ chưa check-in được báo trong preview; chỉ khi commit mới chuyển thành missed và xếp lại phần việc. Đã học 30/90 phút thì chỉ còn 60 phút cần xếp. Nếu preview đã qua phút bắt đầu, Save làm mới đề xuất trước và cần xác nhận lại.
-7. Team: tạo workspace, tạo lời mời theo email, người nhận đăng nhập và chấp nhận. Lời mời nằm trong ứng dụng, không gửi email.
+7. Team: tạo workspace, tạo lời mời theo email; app hiện **mã mời** một lần, chủ workspace tự gửi mã cho người nhận. Người nhận đăng nhập bằng đúng email đó và nhập mã để chấp nhận (email chưa được xác minh nên email khớp thôi là chưa đủ). Lời mời nằm trong ứng dụng, không gửi email.
 8. Chia sẻ task cho thành viên. Task xuất hiện trong workspace và chỉ được xếp vào lịch assignee. Tìm giờ rảnh chung sau khi mỗi thành viên thêm availability.
 9. Companion: chọn mood, gửi tin nhắn; câu trả lời dựa trên task, lịch và báo cáo tuần của tài khoản.
 
@@ -88,24 +88,25 @@ Demo tự động dùng DB tạm và đồng hồ mô phỏng để kiểm tra c
 .\.venv\Scripts\python.exe scripts/demo_backend.py
 ```
 
-Demo không gọi nhà cung cấp AI và không thay đổi `pathly.db` của Minh.
+Demo không gọi nhà cung cấp AI và không thay đổi `local.db`.
 
 ## API cho frontend và Thắng
 
-Mọi API `/api/*` ngoài register/login yêu cầu `Authorization: Bearer <access_token>`. Token là chuỗi ngẫu nhiên; server chỉ lưu SHA-256 của token. Password được băm scrypt với salt riêng. Không trả password hash ra response.
+Mọi API `/api/v1/*` ngoài register/login/health yêu cầu `Authorization: Bearer <access_token>`. Token là chuỗi ngẫu nhiên; server chỉ lưu SHA-256 của token. Password được băm argon2id. Session mặc định hết hạn sau 60 phút (`SESSION_MINUTES`); sai mật khẩu 5 lần liên tiếp khóa đăng nhập 15 phút (429). Không trả password hash ra response.
 
 | Nhóm | Endpoint |
 | --- | --- |
-| Tài khoản | `POST /api/auth/register`, `/login`, `/logout`; `GET/PATCH /api/me` |
-| Goal | `GET/POST /api/goals`; `GET/PATCH/DELETE /api/goals/{id}` |
-| Task | `GET/POST /api/tasks`; `GET/PATCH/DELETE /api/tasks/{id}`; `GET /api/tasks?date=YYYY-MM-DD&team_id=...&status=pending` |
-| Giờ rảnh/bận | `GET/PUT /api/availability`; `GET/POST /api/busy-blocks`; `DELETE /api/busy-blocks/{id}` |
-| Lịch | `GET /api/schedule?starts_at=...&ends_at=...`; `POST /api/schedule/plan`, `/replan`; `POST /api/schedule/{id}/check-in` |
-| Nhóm | `GET/POST /api/teams`; `GET /api/teams/{id}/members`; `POST /api/teams/{id}/invitations`; `GET /api/invitations`; `POST /api/invitations/{id}/accept` |
-| Chia sẻ/phối hợp | `POST /api/tasks/{id}/share`; `POST /api/teams/{id}/coordinate` |
-| Báo cáo/nhắc lịch | `GET /api/reports/weekly?start_date=YYYY-MM-DD`; `GET /api/notifications`; `POST /api/notifications/{id}/read` |
-| AI | `POST /api/ai/chat`; `GET/DELETE /api/ai/messages` |
-| Health | `GET /health` |
+| Tài khoản | `POST /api/v1/auth/register` (cần `birth_year`, tùy chọn `account_level`), `/login`, `/logout`; `GET/PATCH /api/v1/me` |
+| Course/ingest (#13) | `GET/POST /api/v1/courses`; `GET/POST /api/v1/courses/{id}/sources` (multipart `file`, PDF ≤ 20 MB) |
+| Goal | `GET/POST /api/v1/goals`; `GET/PATCH/DELETE /api/v1/goals/{id}` |
+| Task | `GET/POST /api/v1/tasks`; `GET/PATCH/DELETE /api/v1/tasks/{id}`; `GET /api/v1/tasks?date=YYYY-MM-DD&team_id=...&status=pending` |
+| Giờ rảnh/bận | `GET/PUT /api/v1/availability`; `GET/POST /api/v1/busy-blocks`; `DELETE /api/v1/busy-blocks/{id}` |
+| Lịch | `GET /api/v1/schedule?starts_at=...&ends_at=...`; `POST /api/v1/schedule/plan`, `/replan`; `POST /api/v1/schedule/{id}/check-in` |
+| Nhóm | `GET/POST /api/v1/teams`; `GET /api/v1/teams/{id}/members`; `POST /api/v1/teams/{id}/invitations` (trả `code` một lần); `GET /api/v1/invitations`; `POST /api/v1/invitations/{id}/accept` (body `{"code"}`); `DELETE /api/v1/teams/{id}/members/{user_id}` |
+| Chia sẻ/phối hợp | `POST /api/v1/tasks/{id}/share`; `POST /api/v1/teams/{id}/coordinate` |
+| Báo cáo/nhắc lịch | `GET /api/v1/reports/weekly?start_date=YYYY-MM-DD`; `GET /api/v1/notifications`; `POST /api/v1/notifications/{id}/read` |
+| AI | `POST /api/v1/ai/chat`; `GET/DELETE /api/v1/ai/messages` |
+| Health | `GET /api/v1/health` |
 
 Hợp đồng đầy đủ gồm request, response và lỗi: [openapi.json](openapi.json). Tạo lại bằng `python scripts/export_openapi.py`. Frontend đã có typed transport `ui/src/api.ts`, xử lý timeout, lỗi validation và session hết hạn.
 
@@ -179,8 +180,20 @@ Bản local ngày 28/10/2026 sau double-check: **57 test Python và 9 test front
 
 Bộ test bao gồm CLI cũ, scheduler, auth/session, quyền sở hữu và nhóm, timezone, preview/commit, check-in idempotent, replan, reminder, AI provider/fallback và lưu DB qua restart. Test frontend kiểm tra state demo cũ và API transport. CI có job Python, PostgreSQL và UI. Thư viện TestClient hiện phát một deprecation warning về việc chuyển từ httpx sang httpx2; các test vẫn chạy thành công.
 
-SQLite mặc định dành cho một backend development process. PostgreSQL có row lock trong các transaction lên lịch/check-in. Cache báo cáo tách theo user/timezone/tuần, tối đa 128 mục, TTL 10 giây và xóa khi transaction commit trong cùng process. Nếu triển khai nhiều worker, cập nhật ở worker khác có thể mất tối đa 10 giây để hiện trong báo cáo. Chưa có password reset, email verification, rate limiting, migration nhiều phiên bản hay triển khai hosting. Nhắc lịch được tạo khi client polling; không có thông báo hệ điều hành khi đóng ứng dụng.
+SQLite mặc định dành cho một backend development process. PostgreSQL có row lock trong các transaction lên lịch/check-in. Cache báo cáo tách theo user/timezone/tuần, tối đa 128 mục, TTL 10 giây và xóa khi transaction commit trong cùng process. Nếu triển khai nhiều worker, cập nhật ở worker khác có thể mất tối đa 10 giây để hiện trong báo cáo. Chưa có password reset, email verification hay triển khai hosting. Có giới hạn 10 tin nhắn chat/phút mỗi user và khóa đăng nhập sau 5 lần sai. Nhắc lịch được ghi khi commit kế hoạch và hiện từ 15 phút trước phiên học (đọc thông báo không ghi DB); không có thông báo hệ điều hành khi đóng ứng dụng.
 
 ## Đồng bộ main ngày 28/10/2026
 
-Main hiện có roadmap concept/câu hỏi mới và database app riêng. Scheduler Workspace là tính năng tùy chọn theo slide cũ, dùng `PATHLY_DATABASE_URL` và `COMPANION_LLM_*` để không xung đột `DATABASE_URL`/`LLM_*` của app. Các issue #9 (concept extraction) và #10 (cited item generation) chưa được phần scheduler này giải quyết. Các kiểm tra concept, ingest, retrieval, auth theo roadmap mới cần được theo dõi trong issue tương ứng.
+Main hiện có roadmap concept/câu hỏi mới. Scheduler Workspace là tính năng tùy chọn theo slide cũ; nó dùng `COMPANION_LLM_*` để không xung đột `LLM_*` của app (database đã được hợp nhất, xem mục dưới). Các issue #9 (concept extraction) và #10 (cited item generation) chưa được phần scheduler này giải quyết. Các kiểm tra concept, ingest, retrieval, auth theo roadmap mới cần được theo dõi trong issue tương ứng.
+
+## Hợp nhất backend ngày 28/10/2026 (#13, #14)
+
+Sau review PR #31, backend scheduler và app chính dùng **một** database và **một** lịch sử migration:
+
+- `DATABASE_URL` thay cho `PATHLY_DATABASE_URL`; bảng `users` là bảng chuẩn của migration `0001` (có `birth_year`, `account_level`, `adult_verified`, `failed_login_attempts`, `locked_until`). Migration `0002_scheduling_workspace` thêm các bảng scheduler; `db/schema.sql` được cập nhật tương ứng.
+- Mọi endpoint nằm dưới `/api/v1` theo spec; health ở `GET /api/v1/health`.
+- Thêm `POST/GET /api/v1/courses` và upload PDF theo trang (#13).
+- Auth theo #14: argon2id, mật khẩu ≥ 8 ký tự có chữ và số, khóa 15 phút sau 5 lần sai, session 60 phút. Vẫn dùng session opaque phía server (thu hồi được khi logout) thay vì JWT.
+- Persona “girlfriend” chỉ bật được khi `adult_verified = 1`, tài khoản university và ≥ 18 tuổi; mặc định là `buddy`.
+- Lời mời nhóm cần mã mời (xem Luồng thử nhanh, bước 7).
+- Trên PostgreSQL không còn khóa toàn cục trong process; row lock `SELECT ... FOR UPDATE` theo user đã đủ. SQLite (dev) vẫn dùng khóa trong process.
