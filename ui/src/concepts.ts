@@ -117,7 +117,12 @@ export function addPrereq(
   };
 }
 
-export const confirmAll = (g: Graph): Graph => ({
+export const removePrereq = (g: Graph, parentId: string, childId: string): Graph => ({
+  ...g,
+  prereqs: g.prereqs.filter((p) => !(p.parent_id === parentId && p.child_id === childId)),
+});
+
+export const confirmAll =(g: Graph): Graph => ({
   ...g,
   concepts: g.concepts.map((c) => ({ ...c, confirmed: true })),
 });

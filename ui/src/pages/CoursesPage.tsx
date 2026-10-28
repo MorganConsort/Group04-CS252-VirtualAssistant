@@ -7,12 +7,13 @@ import {
   ERRORS,
   merge,
   remove,
+  removePrereq,
   rename,
   type Graph,
 } from "../concepts";
 
 type Row = UploadResult & { error?: string };
-const STATUS = { processing: "Processing", processed: "Done", error: "Error" };
+const STATUS = { processing: "Processing…", processed: "Done", error: "Error" };
 
 /** S3 Upload + S4 Concept editor (spec section 5), backed by the mock in api/courses.ts. */
 export function CoursesPage({ courseId }: { courseId: string }) {
@@ -22,6 +23,7 @@ export function CoursesPage({ courseId }: { courseId: string }) {
   const [undo, setUndo] = useState<{ graph: Graph; title: string } | null>(null);
   const [edgeError, setEdgeError] = useState<{ id: string; text: string } | null>(null);
   const [dragging, setDragging] = useState(false);
+  const [proposing, setProposing] = useState(false);
   const picker = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -51,7 +53,12 @@ export function CoursesPage({ courseId }: { courseId: string }) {
         update(file.name, await uploadSource(courseId, file));
         if (!proposed) {
           proposed = true;
-          setGraph(await proposeConcepts(courseId));
+          setProposing(true);
+          try {
+            setGraph(await proposeConcepts(courseId));
+          } finally {
+            setProposing(false);
+          }
         }
       } catch (err) {
         update(file.name, {
@@ -72,6 +79,8 @@ export function CoursesPage({ courseId }: { courseId: string }) {
     setGraph(next);
     setEdgeError(null);
   };
+  const confirmed = graph?.concepts.filter((c) => c.confirmed).length ?? 0;
+  const allConfirmed = !!graph && graph.concepts.length > 0 && confirmed === graph.concepts.length;
   const title = (id: string) => graph?.concepts.find((c) => c.id === id)?.title ?? id;
 
   return (
@@ -84,7 +93,10 @@ export function CoursesPage({ courseId }: { courseId: string }) {
             e.preventDefault();
             setDragging(true);
           }}
-          onDragLeave={() => setDragging(false)}
+          // Ignore leave events fired when the pointer moves onto a child of the zone.
+          onDragLeave={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDragging(false);
+          }}
           onDrop={drop}
         >
           <p>Drag and drop PDF files here (up to 20 MB)</p>
@@ -109,7 +121,7 @@ export function CoursesPage({ courseId }: { courseId: string }) {
             {files.map((f) => (
               <li key={f.file_name} className={f.status}>
                 <span>{f.file_name}</span>
-                <span>{f.pages ? `${f.pages} trang` : ""}</span>
+                <span>{f.pages ? `${f.pages} ${f.pages === 1 ? "page" : "pages"}` : ""}</span>
                 <span>{STATUS[f.status]}</span>
                 {f.error && <span className="row-error">{f.error}</span>}
               </li>
@@ -118,10 +130,21 @@ export function CoursesPage({ courseId }: { courseId: string }) {
         )}
       </div>
 
+      {proposing && (
+        <p className="card proposing" role="status">
+          Finding concepts in your slides…
+        </p>
+      )}
+
       {graph && (
         <div className="card">
           <div className="concept-toolbar">
-            <h2>Concept ({graph.concepts.length})</h2>
+            <h2>
+              Concepts ({graph.concepts.length})
+              <span className="confirm-count">
+                {confirmed} of {graph.concepts.length} confirmed
+              </span>
+            </h2>
             <button
               className="secondary-action"
               disabled={selected.length !== 2}
@@ -130,12 +153,17 @@ export function CoursesPage({ courseId }: { courseId: string }) {
                 setSelected([]);
               }}
             >
-              Merge
+              Merge ({selected.length}/2)
             </button>
-            <button className="primary-action" onClick={() => edit(confirmAll(graph))}>
-              Confirm all
+            <button
+              className="primary-action"
+              disabled={allConfirmed}
+              onClick={() => edit(confirmAll(graph))}
+            >
+              {allConfirmed ? "All confirmed ✓" : "Confirm all"}
             </button>
           </div>
+          <p className="hint">Tick two concepts to merge them. Edit a name to rename it.</p>
           {graph.concepts.length === 0 && <p>No concepts yet.</p>}
           <ul className="concept-list">
             {graph.concepts.map((c) => {
@@ -164,9 +192,20 @@ export function CoursesPage({ courseId }: { courseId: string }) {
                       {c.source_file} · p. {c.source_pages.join(", ")}
                     </span>
                     {parents.length > 0 && (
-                      <p className="parents">
-                        Learn first: {parents.map((p) => title(p.parent_id)).join(", ")}
-                      </p>
+                      <div className="parents">
+                        Learn first:
+                        {parents.map((p) => (
+                          <span key={p.parent_id} className="prereq-chip">
+                            {title(p.parent_id)}
+                            <button
+                              aria-label={`Remove prerequisite ${title(p.parent_id)} from ${c.title}`}
+                              onClick={() => edit(removePrereq(graph, p.parent_id, c.id))}
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
                     )}
                     <select
                       aria-label={`Add a prerequisite for ${c.title}`}

@@ -5,6 +5,7 @@ import {
   createsCycle,
   merge,
   remove,
+  removePrereq,
   MAX_UPLOAD_BYTES,
   type Concept,
   type Graph,
@@ -68,5 +69,10 @@ describe("prerequisite cycles", () => {
     expect(addPrereq(graph, "c", "a")).toHaveProperty("error");
     const ok = addPrereq(graph, "a", "c");
     expect("prereqs" in ok && ok.prereqs).toContainEqual(edge("a", "c"));
+  });
+  it("removing an edge unblocks the loop it caused", () => {
+    const g = removePrereq(graph, "b", "c");
+    expect(g.prereqs).toEqual([edge("a", "b")]);
+    expect(addPrereq(g, "c", "a")).toHaveProperty("prereqs");
   });
 });
