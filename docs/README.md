@@ -10,3 +10,4 @@ Thư mục tài liệu của dự án: kế hoạch, đặc tả, nhiệm vụ h
 | [qa/reports/](qa/reports/) | Báo cáo QA hằng tuần (`python dev.py qa report --week N`) |
 | `adr/` | Architecture Decision Records (tạo từ tuần 1, issue #12 và #18) |
 | [schedule/](schedule/) | Lịch trình trình bày |
+| [frontend-integration-handoff.md](frontend-integration-handoff.md) | Learning-check API proposal, frontend verification and PR reviewer roles |

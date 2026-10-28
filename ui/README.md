@@ -6,7 +6,7 @@ React + TypeScript frontend for the CS252 study assistant. The Python CLI stays 
 
 Pathly is a responsive browser application built with React, TypeScript, and Vite. Development is supported on Windows, macOS, and Linux. The finished static build runs in current versions of Chrome, Edge, Firefox, and Safari, including mobile browsers. It is not currently a native Windows, Android, or iOS application.
 
-This prototype has no backend, user accounts, cloud synchronization, database, or real AI service. Its data stays in the current browser's local storage.
+The UI defaults to a local demo: login and PDF/concept processing are mocked, with no real account, cloud synchronization or AI generation. Study progress stays in browser localStorage. Login and uploaded-file/concept state stay in memory; reloading signs you out and clears that temporary state. The repository's Python LLM/database modules are not connected to these screens yet.
 
 ## Requirements
 
@@ -36,6 +36,8 @@ Open the GitHub repository, choose **Code → Download ZIP**, extract it, and op
 From the repo root you can also use the project CLI: `python dev.py ui install`, then `python dev.py ui dev` (and `ui build`, `ui test`).
 
 The app opens on a mock login/register screen (`src/api/mock.ts`): any valid email, a password of at least 8 characters, and (to register) a birth year from 1900 to this year will sign in. The token lives in memory only, so reloading the page signs you out.
+
+For example, use `student@example.test` and `demo-password`. Use sample credentials, not a real password.
 
 From the `ui` folder:
 
@@ -67,6 +69,8 @@ npm run preview
 
 - `node` or `npm` is not recognized: install Node.js 24 LTS, close the terminal, and open a new one.
 - PowerShell reports that scripts are disabled: run `.\start.cmd` instead of `.\start.ps1`.
+- PowerShell blocks `npm.ps1`: use `npm.cmd` or `npx.cmd` in place of `npm` or `npx`.
+- `pnpm.cmd` is not recognized: use `npx.cmd --yes pnpm@11.25.0` in its place, from the `ui` folder. This runs the project's pinned pnpm version without a global installation; the first run needs internet access.
 - Dependencies are missing: run `npm install` again in the `ui` folder.
 - Port 5173 is busy: run `npm run dev -- --port 5174` and open the printed URL.
 - To reset the demo: remove the `pathly.demo.v1` entry from the site's browser local storage.
@@ -74,11 +78,12 @@ npm run preview
 ## Try the workflows
 
 - Home: start a lesson, mark it studied, and pass its knowledge check. Reading does not award progress; passing the same session twice awards credit only once.
-- Schedule: navigate weeks/months, return to Today, and select any session.
-- Library: search and filter modules; choose one to review prerequisites in AI Reporter.
-- AI Reporter: try `learn Math 7`, `learn Physics`, `learn History 9`, `learn Biology 9`, `adjust workload`, or `weekly report`.
+- Review (Schedule): navigate weeks/months, return to Today, and select any session.
+- Courses: try the local PDF upload and concept editor, then search/filter the sample library below it. Concept edits survive navigation between pages until reload. The proposed concepts are fixed Week 1 examples, not extracted from your uploaded PDF.
+- Ask (AI Reporter): try `learn Math 7`, `learn Physics`, `learn History 9`, `learn Biology 9`, `adjust workload`, or `weekly report`.
+- Mastery opens course progress; Companion is a placeholder. Select the Pathly logo in the sidebar to return Home.
 - Confirm the prerequisite, review the proposed plan, and approve enrollment. New sessions appear in the calendar. History starts at level 7; later levels remain conditional.
-- Save a module to the future plan without adding sessions. Find it under Library → Saved for later.
+- Save a module to the future plan without adding sessions. Find it under Courses → Saved for later.
 - Settings: change the display name and available weekly hours. Use Adjust workload to explicitly approve schedule changes.
 
 ## Prototype boundaries
@@ -89,10 +94,43 @@ State is stored under `pathly.demo.v1` in browser localStorage, not an account. 
 
 ## Code map
 
-- `src/model.ts`: typed sample courses, sessions, persistence, and state transitions. Replace these with API-backed data when ready.
-- `src/App.tsx`: navigation, page views, controlled forms, lesson dialogs, and scripted coaching flows.
+- `src/App.tsx`: workspace state, navigation and scripted coaching orchestration.
+- `src/pages/`: Home, Schedule, Progress, Library, Reporter and the merged Courses upload/editor view.
+- `src/auth.ts`, `src/components/AuthScreen.tsx`, `src/api/mock.ts`: mock login/register and course context.
+- `src/concepts.ts`, `src/api/courses.ts`: concept graph operations and mock PDF/concept processing.
+- `src/components/`: shared navigation, buttons, accessible modal and progress meter.
+- `src/domain.ts`, `src/model.ts`: workspace types, demo persistence and state transitions.
+- `src/demo/`: sample courses/sessions and the local quiz adapter (not secure grading).
+- `src/api/`: proposed learning-check types, response validation, configuration and HTTP adapter.
+- `src/features/learning-check/`: lesson dialog and asynchronous check UI.
 - `src/styles.css`: shared Figma colors, typography, cards, sidebar, responsive layouts.
 - `src/model.test.ts`: progress, future-plan, enrollment, and workload invariants.
+- `src/**/*.test.*`, `e2e/`: service/component and desktop/mobile browser regression tests.
+
+## Learning-check integration and frontend checks
+
+Default mode still runs entirely as a demo. Questions are pre-built; no AI provider is connected.
+For local backend integration only, copy `check-config.example` to `.env.local`, change
+`VITE_CHECK_MODE` to `api`, set `VITE_API_BASE_URL`, and restart Vite. Only learning checks use
+that API. Courses, scheduling and coaching stay in the demo; API results do not change its
+local progress. Failed requests show an error and retry action, never fallback questions.
+No authorization token or cookies are sent yet. Do not use this preview with real student data.
+
+Maintainer verification (PowerShell; the `.cmd` suffix avoids script-policy errors):
+
+```powershell
+npx.cmd --yes pnpm@11.25.0 install --frozen-lockfile
+npx.cmd --yes pnpm@11.25.0 exec playwright install chromium
+npx.cmd --yes pnpm@11.25.0 check
+```
+
+`pnpm check` runs unit/component tests, the production build and browser tests. Browser
+tests use dedicated ports 5178/5179 and synthetic API responses. CI runs the same frontend
+checks and uploads browser screenshots/reports. The Python `devops ci` command remains a
+separate check and does not run the frontend suite.
+
+See [frontend integration handoff](../docs/frontend-integration-handoff.md) for API examples,
+reviewer names and roles, limitations, and the PR preparation checklist.
 
 ## Design source
 

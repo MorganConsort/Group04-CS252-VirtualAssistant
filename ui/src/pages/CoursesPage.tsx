@@ -87,6 +87,7 @@ export function CoursesPage({ courseId }: { courseId: string }) {
     <section className="courses" aria-labelledby="upload-title">
       <div className="card">
         <h2 id="upload-title">Course materials</h2>
+        <p className="hint">Demo: files are checked locally. Concepts are fixed Week 1 examples, not extracted from your PDF. Edits last until you reload.</p>
         <div
           className={`dropzone ${dragging ? "dragging" : ""}`}
           onDragOver={(e) => {

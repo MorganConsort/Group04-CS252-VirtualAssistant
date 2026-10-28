@@ -39,9 +39,10 @@ export function AuthScreen({ onAuth }: { onAuth: (token: string) => void }) {
     type: string,
   ) => (
     <label className="auth-field">
-      {label}
+      <span id={`${key}-label`}>{label}</span>
       <input
         type={type}
+        aria-labelledby={`${key}-label`}
         value={form[key]}
         onChange={(e) => set(key, e.target.value)}
         aria-invalid={!!errors[key]}

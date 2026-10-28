@@ -404,11 +404,12 @@ main {
 .button {
   color: var(--color-primary-ink);
   background: var(--tint);
-  border-radius: 12px;
-  padding: 9px 16px;
-  font-size: 12px;
+  border-radius: var(--radius-md);
+  min-height: 44px;
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-sm);
   font-weight: 600;
-  white-space: nowrap;
+  white-space: normal;
 }
 .button.primary,
 .primary-action,
@@ -1028,6 +1029,44 @@ legend {
 .answer input {
   accent-color: var(--color-primary-ink);
 }
+.learning-check fieldset {
+  min-width: 0;
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-md);
+}
+.learning-check .answer {
+  min-height: 44px;
+  margin-top: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.learning-check .answer:has(input:checked) {
+  border-color: var(--color-primary-ink);
+  background: var(--gradient-wash);
+}
+.learning-check .answer:has(input:focus-visible) {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+.learning-check fieldset:disabled .answer {
+  cursor: default;
+}
+.learning-check .check-citation {
+  display: block;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.check-state {
+  padding: var(--space-5);
+  margin-top: var(--space-4);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--gradient-wash);
+}
 .lesson-note {
   background: var(--color-bg);
   padding: 18px;
@@ -1132,15 +1171,18 @@ legend {
   }
   .topbar {
     gap: 10px;
+    flex-wrap: wrap;
   }
   .topbar > span {
     font-size: 11px;
   }
   .topbar > div {
     gap: 4px;
+    margin-left: auto;
   }
   .demo-label {
-    display: none;
+    display: inline;
+    max-width: 160px;
   }
   .page-heading {
     margin: 28px 0;
