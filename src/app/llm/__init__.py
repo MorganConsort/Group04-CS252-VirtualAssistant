@@ -6,7 +6,8 @@ import os
 from app.llm.base import LLMClient, LLMResult, RetryableError
 from app.llm.fake import FakeLLM
 
-DEFAULT_GEMINI_MODEL = "gemini-3.8-flash"
+# Tried in order: the next model is used when one is over quota or unavailable.
+DEFAULT_GEMINI_MODELS = ("gemini-3.5-flash-lite", "gemini-3.1-flash-lite")
 
 __all__ = ["FakeLLM", "LLMClient", "LLMResult", "RetryableError", "get_client"]
 
@@ -21,5 +22,6 @@ def get_client() -> LLMClient:
     if provider == "gemini":
         from app.llm.gemini import GeminiClient
 
-        return GeminiClient(api_key, os.environ.get("LLM_MODEL", "").strip() or DEFAULT_GEMINI_MODEL)
+        models = [m.strip() for m in os.environ.get("LLM_MODEL", "").split(",") if m.strip()]
+        return GeminiClient(api_key, models or list(DEFAULT_GEMINI_MODELS))
     raise ValueError(f"LLM_PROVIDER không hỗ trợ: '{provider}'. Dùng: fake, gemini.")

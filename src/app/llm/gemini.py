@@ -32,40 +32,53 @@ def _retry_after(error) -> float | None:
 
 
 class GeminiClient(LLMClient):
-    def __init__(self, api_key: str, model: str):
+    def __init__(self, api_key: str, models: list[str]):
         self.api_key = api_key
-        self.model = model
+        self.models = list(models)  # in priority order; the next one is used when one fails
         self._client = None  # created on first call so tests never need the SDK
 
     def complete(self, prompt: str, *, system: str = "", json_schema: dict | None = None,
                  max_tokens: int = 1024, temperature: float = 0.2) -> LLMResult:
         start = time.monotonic()
-        for delay in (*RETRY_DELAYS, None):
+        for model in list(self.models):
             try:
-                text, input_tokens, output_tokens = self._generate(
-                    prompt, system, json_schema, max_tokens, temperature)
+                text, input_tokens, output_tokens = self._with_retries(
+                    model, prompt, system, json_schema, max_tokens, temperature)
                 break
             except RetryableError as e:
-                wait = max(delay or 0, e.retry_after or 0)
-                if delay is None or wait > MAX_WAIT:
+                if model == self.models[-1]:
                     raise
-                time.sleep(wait)
+                if (e.retry_after or 0) > MAX_WAIT:  # daily quota: skip it for this client's life
+                    self.models.remove(model)
+                log.warning("provider=gemini model=%s unavailable (%s), trying the next model",
+                            model, e)
         if json_schema is not None:
             try:
                 json.loads(text)
             except json.JSONDecodeError as e:
                 raise ValueError(f"Gemini trả về JSON không hợp lệ: {e}") from e
 
-        in_price, out_price = PRICES.get(self.model, (0.0, 0.0))
+        in_price, out_price = PRICES.get(model, (0.0, 0.0))
         result = LLMResult(text, input_tokens, output_tokens,
                            (input_tokens * in_price + output_tokens * out_price) / 1_000_000)
         # Never log prompt or answer: they may contain student work.
         log.info("provider=gemini model=%s input_tokens=%d output_tokens=%d cost_usd=%.6f duration_ms=%d",
-                 self.model, input_tokens, output_tokens, result.cost_usd,
+                 model, input_tokens, output_tokens, result.cost_usd,
                  (time.monotonic() - start) * 1000)
         return result
 
-    def _generate(self, prompt: str, system: str, json_schema: dict | None,
+    def _with_retries(self, model: str, *args) -> tuple[str, int, int]:
+        for delay in (*RETRY_DELAYS, None):
+            try:
+                return self._generate(model, *args)
+            except RetryableError as e:
+                wait = max(delay or 0, e.retry_after or 0)
+                if delay is None or wait > MAX_WAIT:
+                    raise
+                time.sleep(wait)
+        raise AssertionError("unreachable")  # the last attempt returns or raises
+
+    def _generate(self, model: str, prompt: str, system: str, json_schema: dict | None,
                   max_tokens: int, temperature: float) -> tuple[str, int, int]:
         import ssl
 
@@ -88,7 +101,7 @@ class GeminiClient(LLMClient):
             response_json_schema=json_schema,
         )
         try:
-            resp = self._client.models.generate_content(model=self.model, contents=prompt, config=config)
+            resp = self._client.models.generate_content(model=model, contents=prompt, config=config)
         except errors.APIError as e:
             if e.code == 429 or e.code >= 500:
                 raise RetryableError(f"Gemini HTTP {e.code}", _retry_after(e)) from e

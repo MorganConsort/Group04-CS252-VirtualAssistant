@@ -30,7 +30,8 @@ def test_get_client_gemini(monkeypatch):
     monkeypatch.setenv("LLM_API_KEY", "test-key")
     monkeypatch.delenv("LLM_MODEL", raising=False)
     client = get_client()
-    assert isinstance(client, GeminiClient) and client.model == "gemini-3.8-flash"
+    assert isinstance(client, GeminiClient)
+    assert client.models == ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite"]
 
 
 def test_get_client_unknown_provider(monkeypatch):
@@ -40,12 +41,14 @@ def test_get_client_unknown_provider(monkeypatch):
         get_client()
 
 
-def _gemini(monkeypatch, *outcomes):
+def _gemini(monkeypatch, *outcomes, models=("gemini-3.8-flash",)):
     """GeminiClient whose vendor call returns/raises the given outcomes in order, no network."""
-    client = GeminiClient("test-key", "gemini-3.8-flash")
+    client = GeminiClient("test-key", list(models))
+    client.called = []
     pending = list(outcomes)
 
-    def fake_generate(*args):
+    def fake_generate(model, *args):
+        client.called.append(model)
         outcome = pending.pop(0)
         if isinstance(outcome, Exception):
             raise outcome
@@ -93,3 +96,26 @@ def test_retry_after_is_read_from_retry_info():
     assert _retry_after(SimpleNamespace(details={"error": {"details": [info]}})) == 62322
     assert _retry_after(SimpleNamespace(details={"error": {"details": []}})) is None
     assert _retry_after(SimpleNamespace(details=None)) is None
+
+
+def test_get_client_reads_a_model_priority_list(monkeypatch):
+    monkeypatch.setenv("LLM_PROVIDER", "gemini")
+    monkeypatch.setenv("LLM_API_KEY", "test-key")
+    monkeypatch.setenv("LLM_MODEL", " a , b ")
+    assert get_client().models == ["a", "b"]
+
+
+def test_gemini_falls_back_and_skips_a_model_out_of_daily_quota(monkeypatch):
+    quota = RetryableError("429", retry_after=62322)
+    client = _gemini(monkeypatch, quota, ("{}", 0, 0), ("{}", 0, 0), models=("first", "second"))
+    client.complete("p")
+    client.complete("p")
+    assert client.called == ["first", "second", "second"]
+
+
+def test_gemini_tries_the_next_model_after_retries_but_raises_on_the_last(monkeypatch):
+    overloaded = RetryableError("503")
+    client = _gemini(monkeypatch, *[overloaded] * 6, models=("first", "second"))
+    with pytest.raises(RetryableError):
+        client.complete("p")
+    assert client.called == ["first"] * 3 + ["second"] * 3
