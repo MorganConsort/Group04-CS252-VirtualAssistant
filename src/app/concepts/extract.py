@@ -1,6 +1,6 @@
 """Concept extraction from per-page slide text (issue #9, spec 10.1).
 
-Pages are read in overlapping windows, each window asks the LLM for 0-2 concepts, duplicates
+Pages are read in overlapping windows, each window asks the LLM for 0-8 concepts, duplicates
 are merged, and a deck with too many candidates is consolidated to the core concepts.
 Slide text is data only, never instructions (spec 10.6).
 """
@@ -16,14 +16,17 @@ from uuid import uuid4
 
 from sqlalchemy import text
 
-from app.llm import LLMClient
+from app.llm import LLMClient, RetryableError
 
 log = logging.getLogger("app.concepts")
 
 PROMPTS = Path(__file__).parent / "prompts"
-EXTRACT_PROMPT = "extract_v1"
+EXTRACT_PROMPT = "extract_v2"
 CONSOLIDATE_PROMPT = "consolidate_v1"
-WINDOW, STEP = 3, 2  # 3 pages sliding by 2, so a concept split across two pages stays whole
+# 40 pages sliding by 36: the 4-page overlap keeps a concept split across windows whole.
+# v1 used 3 by 2, i.e. 73 calls for the 146-page Week 1 deck: far over the Gemini free tier
+# (20 requests/day), and each call saw too little text to judge what a concept is.
+WINDOW, STEP = 40, 36
 SIMILAR_TITLE = 0.9
 MAX_CONCEPTS = 20
 BLOOM_LEVELS = ("remember", "understand", "apply", "analyze", "evaluate", "create")
@@ -148,9 +151,9 @@ def extract_concepts(llm: LLMClient, pages: list[str]) -> list[dict]:
                   f"<slide_text>\n{_data(slides)}\n</slide_text>")
         try:
             answer = llm.complete(prompt, system=system, json_schema=EXTRACT_SCHEMA,
-                                  max_tokens=4096, temperature=0.2).text  # thinking counts
+                                  max_tokens=8192, temperature=0.2).text  # thinking counts
             found = merge(parse_concepts(answer, set(numbers)), found)
-        except ValueError as exc:  # also covers json.JSONDecodeError
+        except (ValueError, RetryableError) as exc:  # bad JSON, or quota/network after retries
             log.warning("concepts: skipped pages %d-%d: %s", numbers[0], numbers[-1], exc)
     if len(found) > MAX_CONCEPTS:
         found = consolidate(llm, found)

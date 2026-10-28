@@ -13,6 +13,14 @@ class LLMResult:
     cost_usd: float
 
 
+class RetryableError(Exception):
+    """Network error or HTTP 429/5xx: worth trying again, after ``retry_after`` seconds if known."""
+
+    def __init__(self, message: str, retry_after: float | None = None):
+        super().__init__(message)
+        self.retry_after = retry_after
+
+
 class LLMClient(ABC):
     @abstractmethod
     def complete(self, prompt: str, *, system: str = "", json_schema: dict | None = None,

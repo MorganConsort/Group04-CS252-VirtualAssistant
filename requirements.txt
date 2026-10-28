@@ -30,6 +30,7 @@ fsrs~=6.3                 # scheduler spaced repetition cho tuần 2
 # openai~=3.37
 # anthropic~=2.3
 google-genai~=2.33
+truststore~=0.10          # Gemini dùng kho chứng chỉ của OS (máy có antivirus chặn TLS)
 
 # --- Test & lint (QA, DevOps) ---
 pytest~=9.1

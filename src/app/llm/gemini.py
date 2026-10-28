@@ -5,19 +5,30 @@ import json
 import logging
 import time
 
-from app.llm.base import LLMClient, LLMResult
+from app.llm.base import LLMClient, LLMResult, RetryableError
 
 log = logging.getLogger("app.llm")
 
 TIMEOUT_MS = 30_000
 RETRY_DELAYS = (1, 3)  # seconds before retry 1 and retry 2
+MAX_WAIT = 60  # a longer server-requested wait is a daily quota: retrying now cannot succeed
 # USD per 1M tokens (input, output).
 # shortcut: unknown models log cost 0, add their price here when the team switches model.
 PRICES = {"gemini-3.8-flash": (0.75, 3.75)}  # standard tier, Oct 2026
 
+__all__ = ["GeminiClient", "RetryableError"]
 
-class RetryableError(Exception):
-    """Network error or HTTP 429/5xx: worth trying again."""
+
+def _retry_after(error) -> float | None:
+    """Seconds from the RetryInfo detail Gemini attaches to a 429, e.g. "42s"."""
+    details = error.details.get("error", {}).get("details", []) if isinstance(error.details, dict) else []
+    for detail in details:
+        if str(detail.get("@type", "")).endswith("RetryInfo"):
+            try:
+                return float(str(detail.get("retryDelay", "")).rstrip("s"))
+            except ValueError:
+                return None
+    return None
 
 
 class GeminiClient(LLMClient):
@@ -34,10 +45,11 @@ class GeminiClient(LLMClient):
                 text, input_tokens, output_tokens = self._generate(
                     prompt, system, json_schema, max_tokens, temperature)
                 break
-            except RetryableError:
-                if delay is None:
+            except RetryableError as e:
+                wait = max(delay or 0, e.retry_after or 0)
+                if delay is None or wait > MAX_WAIT:
                     raise
-                time.sleep(delay)
+                time.sleep(wait)
         if json_schema is not None:
             try:
                 json.loads(text)
@@ -55,13 +67,19 @@ class GeminiClient(LLMClient):
 
     def _generate(self, prompt: str, system: str, json_schema: dict | None,
                   max_tokens: int, temperature: float) -> tuple[str, int, int]:
+        import ssl
+
         import httpx
+        import truststore
         from google import genai
         from google.genai import errors, types
 
         if self._client is None:
-            self._client = genai.Client(api_key=self.api_key,
-                                        http_options=types.HttpOptions(timeout=TIMEOUT_MS))
+            # OS trust store, not certifi: antivirus/proxy TLS inspection on Windows otherwise
+            # fails every call with CERTIFICATE_VERIFY_FAILED.
+            verify = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+            self._client = genai.Client(api_key=self.api_key, http_options=types.HttpOptions(
+                timeout=TIMEOUT_MS, client_args={"verify": verify}))
         config = types.GenerateContentConfig(
             system_instruction=system or None,
             max_output_tokens=max_tokens,
@@ -73,10 +91,10 @@ class GeminiClient(LLMClient):
             resp = self._client.models.generate_content(model=self.model, contents=prompt, config=config)
         except errors.APIError as e:
             if e.code == 429 or e.code >= 500:
-                raise RetryableError(f"Gemini HTTP {e.code}") from e
+                raise RetryableError(f"Gemini HTTP {e.code}", _retry_after(e)) from e
             raise
         except httpx.TransportError as e:
-            raise RetryableError(f"Gemini network error: {type(e).__name__}") from e
+            raise RetryableError(f"Gemini network error: {type(e).__name__}: {e}") from e
         usage = resp.usage_metadata
         # Thinking tokens are billed as output.
         output_tokens = (usage.candidates_token_count or 0) + (usage.thoughts_token_count or 0)
