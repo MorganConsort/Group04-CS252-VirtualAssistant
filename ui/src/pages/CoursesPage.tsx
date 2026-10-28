@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type DragEvent } from "react";
+import { backendEnabled } from "../api/backend";
 import { ApiError, proposeConcepts, uploadSource, type UploadResult } from "../api/courses";
 import {
   addPrereq,
@@ -15,8 +16,8 @@ import {
 type Row = UploadResult & { error?: string };
 const STATUS = { processing: "Processing…", processed: "Done", error: "Error" };
 
-/** S3 Upload + S4 Concept editor (spec section 5), backed by the mock in api/courses.ts. */
-export function CoursesPage({ courseId }: { courseId: string }) {
+/** S3 Upload + S4 Concept editor (spec section 5); api/courses.ts picks the backend or the demo. */
+export function CoursesPage({ course }: { course: string }) {
   const [files, setFiles] = useState<Row[]>([]);
   const [graph, setGraph] = useState<Graph | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
@@ -24,6 +25,7 @@ export function CoursesPage({ courseId }: { courseId: string }) {
   const [edgeError, setEdgeError] = useState<{ id: string; text: string } | null>(null);
   const [dragging, setDragging] = useState(false);
   const [proposing, setProposing] = useState(false);
+  const [proposeError, setProposeError] = useState("");
   const picker = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -50,21 +52,37 @@ export function CoursesPage({ courseId }: { courseId: string }) {
       ]);
       if (rejected) continue;
       try {
-        update(file.name, await uploadSource(courseId, file));
-        if (!proposed) {
-          proposed = true;
-          setProposing(true);
-          try {
-            setGraph(await proposeConcepts(courseId));
-          } finally {
-            setProposing(false);
-          }
-        }
+        const result = await uploadSource(course, file);
+        update(file.name, { ...result, error: result.warning && ERRORS[result.warning] });
       } catch (err) {
         update(file.name, {
           status: "error",
-          error: err instanceof ApiError ? ERRORS[err.code] : ERRORS.invalid_pdf,
+          error:
+            err instanceof ApiError
+              ? ERRORS[err.code]
+              : err instanceof Error
+                ? err.message
+                : ERRORS.invalid_pdf,
         });
+        continue;
+      }
+      // The backend extracts each new file; the demo shows its fixed sample once.
+      if (proposed && !backendEnabled) continue;
+      proposed = true;
+      setProposing(true);
+      setProposeError("");
+      try {
+        setGraph(await proposeConcepts(course, file.name));
+      } catch (err) {
+        setProposeError(
+          err instanceof ApiError
+            ? ERRORS[err.code]
+            : err instanceof Error
+              ? err.message
+              : ERRORS.concepts_unavailable,
+        );
+      } finally {
+        setProposing(false);
       }
     }
   };
@@ -87,7 +105,11 @@ export function CoursesPage({ courseId }: { courseId: string }) {
     <section className="courses" aria-labelledby="upload-title">
       <div className="card">
         <h2 id="upload-title">Course materials</h2>
-        <p className="hint">Demo: files are checked locally. Concepts are fixed Week 1 examples, not extracted from your PDF. Edits last until you reload.</p>
+        <p className="hint">
+          {backendEnabled
+            ? "AI reads your slides and proposes concepts; this can take a minute or two per file. Concept edits are not saved yet."
+            : "Demo: files are checked locally. Concepts are fixed Week 1 examples, not extracted from your PDF. Edits last until you reload."}
+        </p>
         <div
           className={`dropzone ${dragging ? "dragging" : ""}`}
           onDragOver={(e) => {
@@ -134,6 +156,11 @@ export function CoursesPage({ courseId }: { courseId: string }) {
       {proposing && (
         <p className="card proposing" role="status">
           Finding concepts in your slides…
+        </p>
+      )}
+      {proposeError && (
+        <p className="card row-error" role="alert">
+          {proposeError}
         </p>
       )}
 
@@ -190,7 +217,7 @@ export function CoursesPage({ courseId }: { courseId: string }) {
                     />
                     <p>{c.summary}</p>
                     <span className="citation">
-                      {c.source_file} · p. {c.source_pages.join(", ")}
+                      {c.source_file && `${c.source_file} · `}p. {c.source_pages.join(", ")}
                     </span>
                     {parents.length > 0 && (
                       <div className="parents">
