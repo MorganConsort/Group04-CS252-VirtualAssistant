@@ -33,6 +33,10 @@ Open the GitHub repository, choose **Code → Download ZIP**, extract it, and op
 
 ## Install and run
 
+From the repo root you can also use the project CLI: `python dev.py ui install`, then `python dev.py ui dev` (and `ui build`, `ui test`).
+
+The app opens on a mock login/register screen (`src/api/mock.ts`): any valid email, a password of at least 8 characters, and (to register) a birth year from 1900 to this year will sign in. The token lives in memory only, so reloading the page signs you out.
+
 From the `ui` folder:
 
 ```bash

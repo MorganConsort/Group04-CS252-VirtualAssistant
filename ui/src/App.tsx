@@ -14,8 +14,17 @@ import {
   verifiedCount,
   type Session,
 } from "./model";
+import { currentCourse } from "./api/mock";
+import { AuthScreen } from "./components/AuthScreen";
+import { CoursesPage } from "./pages/CoursesPage";
 
-type Page = "Home" | "Schedule" | "Progress" | "AI Reporter" | "Library";
+type Page =
+  | "Home"
+  | "Schedule"
+  | "Progress"
+  | "AI Reporter"
+  | "Library"
+  | "Companion";
 type Proposal = {
   kind: "enroll" | "balance";
   courseId?: string;
@@ -28,8 +37,16 @@ const pages: Page[] = [
   "Progress",
   "AI Reporter",
   "Library",
+  "Companion",
 ];
-const icons = ["▦", "▤", "◉", "✦", "▣"];
+// The spec's 5 nav items (docs/week1/UIUX.md), mapped onto Pathly's pages; Home stays on the logo.
+const nav: { page: Page; label: string; icon: string }[] = [
+  { page: "Library", label: "Courses", icon: "▣" },
+  { page: "Schedule", label: "Review", icon: "▤" },
+  { page: "AI Reporter", label: "Ask", icon: "✦" },
+  { page: "Progress", label: "Mastery", icon: "◉" },
+  { page: "Companion", label: "Companion", icon: "♥" },
+];
 const courseFor = (id: string) => courses.find((c) => c.id === id)!;
 const formatted = (d: Date) =>
   d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -104,6 +121,8 @@ function Modal({
   );
 }
 export default function App() {
+  // Kept in memory only: a reload logs out until real tokens exist (#6).
+  const [token, setToken] = useState<string | null>(null);
   const [state, setState] = useState(readState);
   const [page, setPage] = useState<Page>(
     () =>
@@ -297,7 +316,8 @@ export default function App() {
     Schedule: "Your learning schedule",
     Progress: `${activeCourse.name} · Course progress`,
     "AI Reporter": "AI learning assistant",
-    Library: "Explore the learning library",
+    Library: `Courses · ${currentCourse.name}`,
+    Companion: "Companion",
   }[page];
   const subtitle = {
     Home: "One step at a time. Here's your learning plan for today.",
@@ -307,7 +327,8 @@ export default function App() {
     "AI Reporter":
       "Ask questions, report difficulties, and reshape your plan together.",
     Library:
-      "Choose a curated module. Your AI coach checks prerequisites before enrollment.",
+      "Upload your slides, confirm the concepts, then add modules from the sample library.",
+    Companion: "Your study buddy while you review. Coming in week 3.",
   }[page];
   const start = addDays(anchor, -((anchor.getDay() + 6) % 7));
   const calendarDays =
@@ -380,6 +401,7 @@ export default function App() {
             explanation: "A passing check is required.",
           },
         ];
+  if (!token) return <AuthScreen onAuth={setToken} />;
   return (
     <div className="app">
       <a className="skip" href="#main">
@@ -391,15 +413,15 @@ export default function App() {
         </a>
         <div className="workspace-label">YOUR WORKSPACE</div>
         <nav aria-label="Main navigation">
-          {pages.map((p, i) => (
+          {nav.map(({ page: p, label, icon }) => (
             <button
               key={p}
               aria-current={page === p ? "page" : undefined}
               className={page === p ? "active" : ""}
               onClick={() => go(p)}
             >
-              <span>{icons[i]}</span>
-              {p}
+              <span>{icon}</span>
+              {label}
             </button>
           ))}
         </nav>
@@ -452,6 +474,7 @@ export default function App() {
           >
             ☰
           </button>
+          <strong className="course-name">{currentCourse.name}</strong>
           <span>
             {today().toLocaleDateString("en-US", {
               weekday: "long",
@@ -477,7 +500,7 @@ export default function App() {
                 setModal("settings");
               }}
             >
-              ◯
+              <span className="avatar" aria-hidden="true" />
             </button>
           </div>
         </header>
@@ -778,6 +801,8 @@ export default function App() {
         )}
         {page === "Library" && (
           <>
+            <CoursesPage courseId={currentCourse.id} />
+            <h2 className="section-title">Sample library</h2>
             <input
               className="search"
               aria-label="Search modules"
@@ -1140,7 +1165,31 @@ export default function App() {
             </aside>
           </div>
         )}
+        {page === "Companion" && (
+          <section className="card companion">
+            <h2>Choose a mode</h2>
+            <ul>
+              <li>Buddy · active</li>
+              <li>Mentor</li>
+              <li aria-disabled="true">
+                🔒 Girlfriend · Verified 18+ users only
+              </li>
+            </ul>
+          </section>
+        )}
       </main>
+      <nav className="bottom-nav" aria-label="Main navigation (mobile)">
+        {nav.map(({ page: p, label, icon }) => (
+          <button
+            key={p}
+            aria-current={page === p ? "page" : undefined}
+            onClick={() => go(p)}
+          >
+            <span aria-hidden="true">{icon}</span>
+            {label}
+          </button>
+        ))}
+      </nav>
       {notice && (
         <div className="toast" role="status">
           ✓ {notice}
