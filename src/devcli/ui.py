@@ -12,6 +12,7 @@ SCRIPTS = {
     "dev": ["run", "dev"],
     "build": ["run", "build"],
     "test": ["test"],
+    "e2e": ["run", "test:e2e"],
 }
 
 
@@ -39,5 +40,5 @@ def _npm(args: argparse.Namespace) -> int:
 
 def register(sub: argparse._SubParsersAction) -> None:
     p = sub.add_parser("ui", help="UI/UX: cài đặt, chạy, build và test frontend")
-    p.add_argument("action", choices=sorted(SCRIPTS), help="install | dev | build | test")
+    p.add_argument("action", choices=sorted(SCRIPTS), help="install | dev | build | test | e2e")
     p.set_defaults(func=_npm)
