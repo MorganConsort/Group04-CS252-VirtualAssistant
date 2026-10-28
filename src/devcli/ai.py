@@ -66,6 +66,31 @@ def _chat(args: argparse.Namespace) -> int:
     return assistant_main(args.question)
 
 
+def _concepts(args: argparse.Namespace) -> int:
+    from dotenv import load_dotenv
+
+    from app.concepts.extract import extract_concepts
+    from app.llm import get_client
+    from assistant.backend.ingest import InvalidPdf, extract_pages
+
+    load_dotenv(ROOT / ".env")  # LLM_PROVIDER / LLM_API_KEY; real env vars win
+    path = Path(args.file)
+    try:
+        pages = extract_pages(path.read_bytes())
+    except (OSError, InvalidPdf) as exc:
+        print(f"Không đọc được {path}: {exc}")
+        return 1
+    concepts = extract_concepts(get_client(), pages)
+    if args.json:
+        print(json.dumps(concepts, ensure_ascii=False, indent=2))
+        return 0
+    for c in concepts:
+        print(f"- {c['title']} [{c['slug']}, {c['bloom_level']}, trang {c['source_pages']}]")
+        print(f"  {c['summary']}")
+    print(f"{path.name}: {len(pages)} trang, {len(concepts)} concept")
+    return 0
+
+
 def register(sub: argparse._SubParsersAction) -> None:
     p = sub.add_parser("ai", help="AI implementation: benchmark và trợ lý")
     ai_sub = p.add_subparsers(dest="ai_command", required=True)
@@ -78,3 +103,8 @@ def register(sub: argparse._SubParsersAction) -> None:
     chat = ai_sub.add_parser("chat", help="chạy trợ lý (hỏi một câu, hoặc chế độ tương tác)")
     chat.add_argument("question", nargs="*")
     chat.set_defaults(func=_chat)
+
+    concepts = ai_sub.add_parser("concepts", help="đề xuất concept từ một file PDF (dùng LLM_PROVIDER)")
+    concepts.add_argument("file")
+    concepts.add_argument("--json", action="store_true", help="in kết quả dạng JSON")
+    concepts.set_defaults(func=_concepts)
