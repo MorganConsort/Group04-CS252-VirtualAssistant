@@ -500,7 +500,7 @@ export default function App() {
                 setModal("settings");
               }}
             >
-              ◯
+              <span className="avatar" aria-hidden="true" />
             </button>
           </div>
         </header>
