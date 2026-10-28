@@ -13,9 +13,10 @@ Dưới đây là các hạng mục công việc cần hoàn thiện:
   - **Cấu hình**: `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL` trong `.env`; có `.env.example`.
   - **Chi phí**: log token và USD mỗi lần gọi, không log nội dung.
 - [ ] **Task 2: Trích xuất concept (#9, Minh, 10 giờ)**
-  - **Cửa sổ trang**: 3 trang, bước 2.
+  - **Cửa sổ trang**: 40 trang, bước 36 (prompt `extract_v2`). Bản đầu dùng 3 trang bước 2 (`extract_v1`): deck Week 1 146 trang tốn 73 lần gọi, 4 deck ~200 lần, vượt quota Gemini free tier (20 lần/ngày) và mỗi lần gọi thấy quá ít text. Nay 4 deck chỉ còn 13 lần gọi.
   - **Output**: `slug, title, summary, bloom_level, source_pages`.
   - **Gộp trùng**: slug trùng, hoặc tên chuẩn hóa giống ≥ 0,9.
+  - **API**: `POST /api/v1/courses/{course_id}/concepts:propose?file_name=<file>` đọc các trang đã upload, trích concept và lưu `confirmed = 0`; LLM lỗi hết thì trả `503 concepts_unavailable`, chưa upload thì `404 no_sources`.
 - [ ] **Task 3: BM25 retrieval (#11, Thắng, 8 giờ)**
   - **Thư viện**: `rank-bm25`; tokenize giữ dấu tiếng Việt.
   - **Ngưỡng**: dưới `MIN_SCORE` trả rỗng → "không tìm thấy".
@@ -32,7 +33,7 @@ Dưới đây là các hạng mục công việc cần hoàn thiện:
 
 ```text
 src/app/llm/            # #8: base.py, fake.py, <vendor>.py, __init__.py (get_client)
-src/app/concepts/       # #9: extract.py, prompts/extract_v1.txt
+src/app/concepts/       # #9: extract.py, prompts/extract_v2.txt (v1 giữ để so sánh)
 src/app/retrieval/      # #11: bm25.py
 src/app/items/          # #10: generate.py, prompts/generate_v1.txt
 eval/run_retrieval.py   # #11: đo top-5 hit rate
@@ -74,14 +75,17 @@ tests/test_llm.py, test_concepts.py, test_retrieval.py, test_items.py
 
 ## 📊 Kết quả tuần 1 (điền khi xong)
 
-**Concept extraction (#9), prompt `extract_v1`**
+**Concept extraction (#9), prompt `extract_v2`**
 
 | File slide | Số trang | Số concept | Concept hợp lý | Tỷ lệ |
 |---|---:|---:|---:|---:|
-| Week 0 - Orientation | | | | |
-| Week01 Problem Framing | | | | |
-| Week02 Decomposition & Use Cases | | | | |
-| Week03 Pitfalls & Pipelines | | | | |
+| Week 0 - Orientation | 94 | 7 ¹ | | |
+| Week01 Problem Framing | 146 | 16 ² | | |
+| Week02 Decomposition & Use Cases | 80 | 8 ² | | |
+| Week03 Pitfalls & Pipelines | 83 | 10 | | |
+
+Chạy ngày 28/10/2026 bằng `gemini-3.5-flash-lite` (quota ngày của `gemini-3.8-flash` đã hết), `python dev.py ai concepts <file>`. Cột "Concept hợp lý" do team chấm.
+¹ Cửa sổ trang 37–76 bị Gemini trả 503 nên bị bỏ qua; chạy lại sẽ có thêm concept. ² Chạy trước khi prompt v2 thêm quy tắc "không gộp nhiều ý thành một chủ đề lớn" (Week03 tăng từ 6 lên 10 concept sau quy tắc này).
 
 **Item generation (#10), kiểm tra tay 20 item**
 
@@ -97,6 +101,7 @@ tests/test_llm.py, test_concepts.py, test_retrieval.py, test_items.py
 |---|---|---|
 | 1 | BM25 chưa tách từ ghép tiếng Việt | Thêm tách từ (underthesea) hoặc vector search ở tuần 2 |
 | 2 | Gộp concept bằng so khớp chuỗi | Embeddings ở tuần 2 |
+| 3 | Gemini free tier chỉ 20 request/ngày; hết quota thì cửa sổ đó bị bỏ qua (log cảnh báo), không trả lỗi | Dùng key trả phí hoặc model có quota lớn hơn khi chạy nhiều deck |
 
 ## 📚 Reference
 - **FSRS và spaced repetition**: nền cho scheduler tuần 2; đọc trước để thiết kế item phù hợp ôn tập.

@@ -400,3 +400,25 @@ class UploadOut(Output):
     pages: int
     status: Literal["processed"]
     warning: Literal["scanned_pdf"] | None = None
+
+
+class ConceptOut(Output):
+    id: str
+    slug: str
+    title: str
+    summary: str
+    bloom_level: str
+    source_pages: list[int]
+    confirmed: bool
+
+
+class PrereqOut(Output):
+    parent_id: str
+    child_id: str
+    kind: Literal["strict", "soft"]
+    confidence: float
+
+
+class ConceptGraphOut(Output):
+    concepts: list[ConceptOut]
+    prereqs: list[PrereqOut]

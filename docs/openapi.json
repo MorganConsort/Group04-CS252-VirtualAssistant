@@ -360,6 +360,70 @@
         }
       }
     },
+    "/api/v1/courses/{course_id}/concepts:propose": {
+      "post": {
+        "tags": [
+          "Courses and sources"
+        ],
+        "summary": "Propose Concepts",
+        "description": "Extract concepts from uploaded pages (one file, or every file) and store them unconfirmed.",
+        "operationId": "propose_concepts_api_v1_courses__course_id__concepts_propose_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Id"
+            }
+          },
+          {
+            "name": "file_name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "File Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConceptGraphOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/goals": {
       "get": {
         "tags": [
@@ -2237,6 +2301,76 @@
         ],
         "title": "CommonSlot"
       },
+      "ConceptGraphOut": {
+        "properties": {
+          "concepts": {
+            "items": {
+              "$ref": "#/components/schemas/ConceptOut"
+            },
+            "type": "array",
+            "title": "Concepts"
+          },
+          "prereqs": {
+            "items": {
+              "$ref": "#/components/schemas/PrereqOut"
+            },
+            "type": "array",
+            "title": "Prereqs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "concepts",
+          "prereqs"
+        ],
+        "title": "ConceptGraphOut"
+      },
+      "ConceptOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "bloom_level": {
+            "type": "string",
+            "title": "Bloom Level"
+          },
+          "source_pages": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Source Pages"
+          },
+          "confirmed": {
+            "type": "boolean",
+            "title": "Confirmed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "summary",
+          "bloom_level",
+          "source_pages",
+          "confirmed"
+        ],
+        "title": "ConceptOut"
+      },
       "CoordinateRequest": {
         "properties": {
           "starts_at": {
@@ -2775,6 +2909,38 @@
           "ends_at"
         ],
         "title": "PlanRequest"
+      },
+      "PrereqOut": {
+        "properties": {
+          "parent_id": {
+            "type": "string",
+            "title": "Parent Id"
+          },
+          "child_id": {
+            "type": "string",
+            "title": "Child Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "strict",
+              "soft"
+            ],
+            "title": "Kind"
+          },
+          "confidence": {
+            "type": "number",
+            "title": "Confidence"
+          }
+        },
+        "type": "object",
+        "required": [
+          "parent_id",
+          "child_id",
+          "kind",
+          "confidence"
+        ],
+        "title": "PrereqOut"
       },
       "ProfilePatch": {
         "properties": {

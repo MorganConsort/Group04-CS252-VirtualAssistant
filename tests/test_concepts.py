@@ -2,25 +2,31 @@
 
 import json
 import logging
+from itertools import pairwise
 
 import pytest
+from conftest import make_pdf
 from sqlalchemy import text
 
 from app.concepts.extract import (
     MAX_CONCEPTS,
+    STEP,
+    WINDOW,
     extract_concepts,
     merge,
     parse_concepts,
     save_concepts,
     windows,
 )
-from app.llm import FakeLLM
+from app.llm import FakeLLM, RetryableError, get_client
 
 WORDS = [
     "alpha", "bravo", "charlie", "delta", "echo", "foxtrot", "golf", "hotel", "india",
     "juliett", "kilo", "lima", "mike", "november", "oscar", "papa", "quebec", "romeo",
     "sierra", "tango", "uniform", "victor", "whiskey", "xray", "yankee",
 ]
+SECOND = STEP + 1  # first page of the second window
+TWO_WINDOWS = ["slide text"] * (WINDOW + 1)
 
 
 def concept(slug, pages, title=None, summary="Một ý chính."):
@@ -33,11 +39,11 @@ def answer(*concepts):
 
 
 def one_concept_per_window(consolidation):
-    """50 pages, 25 windows, one distinct concept each: more than MAX_CONCEPTS."""
+    """25 windows, one distinct concept each: more than MAX_CONCEPTS."""
     responses = {"<candidates>": consolidation}
     for n, word in enumerate(WORDS):
-        responses[f"[Page {2 * n + 1}]"] = answer(concept(word, [2 * n + 1]))
-    return FakeLLM(responses), [f"{word} page" for word in WORDS for _ in range(2)]
+        responses[f"[Page {STEP * n + 1}]"] = answer(concept(word, [STEP * n + 1]))
+    return FakeLLM(responses), ["slide text"] * (STEP * (len(WORDS) - 1) + WINDOW)
 
 
 @pytest.fixture
@@ -56,12 +62,16 @@ def stored(app, course):
         ), {"c": course}).all()
 
 
-def test_windows_cover_every_page_with_one_page_overlap():
+def test_windows_cover_every_page_with_overlap():
     assert windows(0) == []
     assert windows(1) == [[1]]
-    assert windows(3) == [[1, 2, 3]]
-    assert windows(4) == [[1, 2, 3], [3, 4]]
-    assert windows(6) == [[1, 2, 3], [3, 4, 5], [5, 6]]
+    assert windows(WINDOW) == [list(range(1, WINDOW + 1))]
+    assert windows(WINDOW + 1) == [list(range(1, WINDOW + 1)), list(range(SECOND, WINDOW + 2))]
+    for count in (146, 80, 83, 94):  # the four CSC10014 decks
+        found = windows(count)
+        assert sorted({p for w in found for p in w}) == list(range(1, count + 1))
+        assert all(len(set(a) & set(b)) == WINDOW - STEP for a, b in pairwise(found))
+    assert len(windows(146)) == 4  # Week 1 costs 4 LLM calls; v1 windows cost 73
 
 
 def test_parse_drops_decorative_uncited_and_out_of_window_concepts():
@@ -96,12 +106,10 @@ def test_merge_joins_equal_slugs_and_near_equal_titles():
 def test_valid_answers_are_extracted_and_saved(app, course):
     pages = ["Solution ladder: climb only as high as needed", "Search (BM25) rung", "",
              "Framing ladder: need, problem, parts, options, success"]
-    llm = FakeLLM({
-        "[Page 1]": answer(concept("solution-ladder", [1, 2])),
-        "[Page 3]": answer(concept("framing-ladder", [4])),
-    })
+    llm = FakeLLM({"[Page 1]": answer(concept("solution-ladder", [1, 2]),
+                                      concept("framing-ladder", [4]))})
     concepts = extract_concepts(llm, pages)
-    assert llm.calls == 2
+    assert llm.calls == 1
     assert [(c["slug"], c["source_pages"]) for c in concepts] == [
         ("solution-ladder", [1, 2]), ("framing-ladder", [4])]
 
@@ -119,20 +127,35 @@ def test_blank_windows_are_not_sent():
 
 
 def test_bad_json_skips_only_that_window_and_warns(caplog):
-    llm = FakeLLM({"[Page 1]": "not json", "[Page 3]": answer(concept("framing-ladder", [4]))})
+    llm = FakeLLM({"[Page 1]": "not json",
+                   f"[Page {WINDOW + 1}]": answer(concept("framing-ladder", [WINDOW + 1]))})
     with caplog.at_level(logging.WARNING, logger="app.concepts"):
-        concepts = extract_concepts(llm, ["a", "b", "c", "d"])
+        concepts = extract_concepts(llm, TWO_WINDOWS)
     assert [c["slug"] for c in concepts] == ["framing-ladder"]
-    assert "skipped pages 1-3" in caplog.text
+    assert f"skipped pages 1-{WINDOW}" in caplog.text
+
+
+def test_rate_limited_window_is_skipped_instead_of_losing_the_deck(caplog):
+    class DailyQuota(FakeLLM):
+        def complete(self, prompt, **kwargs):
+            if "[Page 1]" in prompt:
+                raise RetryableError("Gemini HTTP 429", retry_after=62322)
+            return super().complete(prompt, **kwargs)
+
+    llm = DailyQuota({f"[Page {WINDOW + 1}]": answer(concept("framing-ladder", [WINDOW + 1]))})
+    with caplog.at_level(logging.WARNING, logger="app.concepts"):
+        concepts = extract_concepts(llm, TWO_WINDOWS)
+    assert [c["slug"] for c in concepts] == ["framing-ladder"]
+    assert f"skipped pages 1-{WINDOW}: Gemini HTTP 429" in caplog.text
 
 
 def test_same_slug_in_two_windows_is_one_concept():
     llm = FakeLLM({
-        "[Page 1]": answer(concept("solution-ladder", [3])),
-        "[Page 3]": answer(concept("solution-ladder", [4])),
+        "[Page 1]": answer(concept("solution-ladder", [SECOND])),
+        f"[Page {WINDOW + 1}]": answer(concept("solution-ladder", [WINDOW + 1])),
     })
-    assert [(c["slug"], c["source_pages"]) for c in extract_concepts(llm, list("abcd"))] == [
-        ("solution-ladder", [3, 4])]
+    assert [(c["slug"], c["source_pages"]) for c in extract_concepts(llm, TWO_WINDOWS)] == [
+        ("solution-ladder", [SECOND, WINDOW + 1])]
 
 
 def test_slide_text_is_fenced_and_cannot_close_its_block():
@@ -157,7 +180,7 @@ def test_too_many_candidates_are_consolidated_with_pages_unioned_in_code():
     concepts = extract_concepts(llm, pages)
     assert llm.calls == len(WORDS) + 1
     assert [(c["slug"], c["source_pages"]) for c in concepts] == [
-        ("alpha", [1, 3]), ("charlie", [5])]
+        ("alpha", [1, SECOND]), ("charlie", [2 * STEP + 1])]
 
 
 def test_failed_consolidation_keeps_at_most_the_limit():
@@ -173,3 +196,38 @@ def test_saving_again_never_duplicates_a_slug_in_the_course(app, course):
                                    concept("solutions-ladder", [79], title="Solution ladders")])
         db.commit()
     assert stored(app, course) == [("solution-ladder", "[77, 78, 79]", 0)]
+
+
+def propose(app, client, headers, course, llm, **params):
+    app.dependency_overrides[get_client] = lambda: llm
+    return client.post(f"/api/v1/courses/{course}/concepts:propose", headers=headers,
+                       params=params)
+
+
+def test_uploaded_pdf_is_proposed_as_unconfirmed_concepts(app, client, headers, course):
+    pdf = make_pdf("Solution ladder rungs", "Search rung", "Framing ladder steps")
+    files = {"file": ("week01.pdf", pdf, "application/pdf")}
+    assert client.post(f"/api/v1/courses/{course}/sources", headers=headers,
+                       files=files).status_code == 201
+    llm = FakeLLM({"[Page 1] Solution ladder rungs": answer(
+        concept("solution-ladder", [1, 2]), concept("framing-ladder", [3]))})
+    response = propose(app, client, headers, course, llm, file_name="week01.pdf")
+    assert response.status_code == 200, response.text
+    assert [(c["slug"], c["source_pages"], c["confirmed"]) for c in response.json()["concepts"]] == [
+        ("solution-ladder", [1, 2], False), ("framing-ladder", [3], False)]
+    assert response.json()["prereqs"] == []
+    assert propose(app, client, headers, course, llm).status_code == 200  # rerun: no duplicates
+    assert stored(app, course) == [("framing-ladder", "[3]", 0), ("solution-ladder", "[1, 2]", 0)]
+
+
+def test_failed_llm_is_reported_not_shown_as_an_empty_deck(app, client, headers, course):
+    files = {"file": ("week01.pdf", make_pdf("Solution ladder"), "application/pdf")}
+    client.post(f"/api/v1/courses/{course}/sources", headers=headers, files=files)
+    response = propose(app, client, headers, course, FakeLLM({"[Page 1]": "not json"}))
+    assert (response.status_code, response.json()["detail"]) == (503, "concepts_unavailable")
+    assert stored(app, course) == []
+
+
+def test_propose_needs_uploaded_pages(app, client, headers, course):
+    response = propose(app, client, headers, course, FakeLLM(), file_name="missing.pdf")
+    assert (response.status_code, response.json()["detail"]) == (404, "no_sources")

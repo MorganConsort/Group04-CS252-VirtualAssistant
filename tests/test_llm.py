@@ -1,7 +1,9 @@
+from types import SimpleNamespace
+
 import pytest
 
 from app.llm import FakeLLM, get_client
-from app.llm.gemini import GeminiClient, RetryableError
+from app.llm.gemini import GeminiClient, RetryableError, _retry_after
 
 
 def test_fake_returns_first_match_and_counts_calls():
@@ -70,3 +72,24 @@ def test_gemini_gives_up_after_two_retries(monkeypatch):
     client = _gemini(monkeypatch, *[RetryableError("429")] * 3)
     with pytest.raises(RetryableError):
         client.complete("p")
+
+
+def test_gemini_waits_as_long_as_the_server_asks(monkeypatch):
+    client = _gemini(monkeypatch, RetryableError("429", retry_after=20), ("{}", 0, 0))
+    slept = []
+    monkeypatch.setattr("app.llm.gemini.time.sleep", slept.append)
+    client.complete("p")
+    assert slept == [20]
+
+
+def test_gemini_does_not_retry_a_daily_quota(monkeypatch):
+    client = _gemini(monkeypatch, RetryableError("429", retry_after=62322), ("{}", 0, 0))
+    with pytest.raises(RetryableError):
+        client.complete("p")
+
+
+def test_retry_after_is_read_from_retry_info():
+    info = {"@type": "type.googleapis.com/google.rpc.RetryInfo", "retryDelay": "62322s"}
+    assert _retry_after(SimpleNamespace(details={"error": {"details": [info]}})) == 62322
+    assert _retry_after(SimpleNamespace(details={"error": {"details": []}})) is None
+    assert _retry_after(SimpleNamespace(details=None)) is None

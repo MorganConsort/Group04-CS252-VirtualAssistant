@@ -3,12 +3,12 @@ from __future__ import annotations
 
 import os
 
-from app.llm.base import LLMClient, LLMResult
+from app.llm.base import LLMClient, LLMResult, RetryableError
 from app.llm.fake import FakeLLM
 
 DEFAULT_GEMINI_MODEL = "gemini-3.8-flash"
 
-__all__ = ["FakeLLM", "LLMClient", "LLMResult", "get_client"]
+__all__ = ["FakeLLM", "LLMClient", "LLMResult", "RetryableError", "get_client"]
 
 
 def get_client() -> LLMClient:

@@ -1,13 +1,19 @@
-"""Courses and page-level PDF sources (UC-01, issue #13)."""
+"""Courses, page-level PDF sources (UC-01, issue #13) and concept proposals (UC-02, issue #9)."""
 
-from fastapi import APIRouter, HTTPException, UploadFile
-from sqlalchemy import delete, select
+import json
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, UploadFile
+from sqlalchemy import delete, select, text
 from sqlalchemy.exc import IntegrityError
+
+from app.concepts.extract import extract_concepts, save_concepts
+from app.llm import LLMClient, get_client
 
 from .dependencies import DB, CurrentUser
 from .ingest import MAX_UPLOAD_BYTES, InvalidPdf, extract_pages, looks_scanned
 from .models import Course, Source
-from .schemas import CourseCreate, CourseOut, SourceOut, UploadOut
+from .schemas import ConceptGraphOut, CourseCreate, CourseOut, SourceOut, UploadOut
 
 router = APIRouter(tags=["Courses and sources"])
 
@@ -81,3 +87,41 @@ def upload_source(course_id: str, file: UploadFile, db: DB, user: CurrentUser):
         status="processed",
         warning="scanned_pdf" if looks_scanned(pages) else None,
     )
+
+
+@router.post("/courses/{course_id}/concepts:propose", response_model=ConceptGraphOut)
+def propose_concepts(
+    course_id: str,
+    db: DB,
+    user: CurrentUser,
+    llm: Annotated[LLMClient, Depends(get_client)],
+    file_name: str | None = None,
+):
+    """Extract concepts from uploaded pages (one file, or every file) and store them unconfirmed."""
+    owned_course(db, course_id, user.id)
+    query = select(Source.file_name, Source.text).where(Source.course_id == course_id)
+    if file_name is not None:
+        query = query.where(Source.file_name == file_name)
+    decks: dict[str, list[str]] = {}
+    for name, page_text in db.execute(query.order_by(Source.file_name, Source.page)):
+        decks.setdefault(name, []).append(page_text)
+    if not decks:
+        raise HTTPException(404, "no_sources")
+    for pages in decks.values():
+        concepts = extract_concepts(llm, pages)
+        # shortcut: a deck with text but no concepts means every LLM call failed (quota,
+        # network, bad JSON); report it rather than look like an empty deck.
+        if not concepts and any(pages):
+            raise HTTPException(503, "concepts_unavailable")
+        save_concepts(db, course_id, concepts)
+    try:
+        db.commit()
+    except IntegrityError:  # a concurrent proposal inserted the same slug
+        db.rollback()
+        raise HTTPException(409, "proposal_in_progress") from None
+    rows = db.execute(text(
+        "SELECT id, slug, title, summary, bloom_level, source_pages, confirmed FROM concepts "
+        "WHERE course_id = :course_id"), {"course_id": course_id}).mappings()
+    concepts = [{**row, "source_pages": json.loads(row["source_pages"] or "[]")} for row in rows]
+    concepts.sort(key=lambda c: (c["source_pages"] or [0])[0])
+    return {"concepts": concepts, "prereqs": []}
