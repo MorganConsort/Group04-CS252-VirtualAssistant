@@ -11,3 +11,7 @@ Thư mục tài liệu của dự án: kế hoạch, đặc tả, nhiệm vụ h
 | `adr/` | Architecture Decision Records (tạo từ tuần 1, issue #12 và #18) |
 | [schedule/](schedule/) | Lịch trình trình bày |
 | [frontend-integration-handoff.md](frontend-integration-handoff.md) | Learning-check API proposal, frontend verification and PR reviewer roles |
+
+- [minh-handoff.md](minh-handoff.md): optional scheduling backend and Workspace setup.
+- [minh-review.md](minh-review.md): scheduling regression review and pending acceptance checks.
+- [openapi.json](openapi.json): scheduling API contract (`python scripts/export_openapi.py`).

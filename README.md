@@ -122,3 +122,7 @@ python dev.py devops ci
 ## 🌿 Đóng góp (Contributing)
 
 Issue → nhánh `<role>-<name>/<issue>-<task>` → commit `<type>(<scope>): <mô tả>` → `python dev.py devops ci` → PR `[<role>-<name>] ...` → 1 approve + CI xanh → squash merge. Chi tiết: [docs/guidelines/](docs/guidelines/README.md).
+
+## Scheduling Workspace (legacy eight-week plan)
+
+The optional scheduling backend and connected Workspace are documented in [docs/minh-handoff.md](docs/minh-handoff.md). Run `.venv/Scripts/python.exe -m uvicorn assistant.backend.main:app --app-dir src --host 127.0.0.1 --port 8000`, then open `http://127.0.0.1:5173/#workspace`. It has its own real account/session flow. This feature is separate from the current concept extraction and cited-question roadmap.

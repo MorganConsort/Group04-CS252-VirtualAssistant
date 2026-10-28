@@ -1,5 +1,5 @@
 export type Page =
-  "Home" | "Schedule" | "Progress" | "AI Reporter" | "Library" | "Companion";
+  "Home" | "Schedule" | "Progress" | "AI Reporter" | "Library" | "Companion" | "Workspace";
 export type Proposal = {
   kind: "enroll" | "balance";
   courseId?: string;
@@ -13,6 +13,7 @@ export const pages: Page[] = [
   "AI Reporter",
   "Library",
   "Companion",
+  "Workspace",
 ];
 // Visible names are shared across navigation and cross-page guidance.
 // Keep the original route IDs so existing bookmarks continue to work.
@@ -23,6 +24,7 @@ export const pageLabels: Record<Page, string> = {
   "AI Reporter": "Ask",
   Progress: "Mastery",
   Companion: "Companion",
+  Workspace: "Workspace",
 };
 // Shared by the desktop sidebar and mobile bottom navigation. Home is on the logo.
 export const nav: { page: Page; label: string; icon: string }[] = [
@@ -31,4 +33,5 @@ export const nav: { page: Page; label: string; icon: string }[] = [
   { page: "AI Reporter", label: pageLabels["AI Reporter"], icon: "✦" },
   { page: "Progress", label: pageLabels.Progress, icon: "◉" },
   { page: "Companion", label: pageLabels.Companion, icon: "♥" },
+  { page: "Workspace", label: pageLabels.Workspace, icon: "◷" },
 ];

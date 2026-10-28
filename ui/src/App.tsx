@@ -24,6 +24,7 @@ import { LibraryPage } from "./pages/LibraryPage";
 import { ProgressPage } from "./pages/ProgressPage";
 import { ReporterPage } from "./pages/ReporterPage";
 import { SchedulePage } from "./pages/SchedulePage";
+import Workspace from "./Workspace";
 
 export default function App() {
   // Kept in memory only: a reload logs out until real tokens exist (#6).
@@ -217,6 +218,7 @@ export default function App() {
     "AI Reporter": `${pageLabels["AI Reporter"]} · Your learning assistant`,
     Library: `${pageLabels.Library} · ${currentCourse.name}`,
     Companion: "Companion",
+    Workspace: "Your study workspace",
   }[page];
   const subtitle = {
     Home: "One step at a time. Here's your learning plan for today.",
@@ -228,9 +230,10 @@ export default function App() {
     Library:
       "Upload your slides, confirm the concepts, then add modules from the sample library.",
     Companion: "Your study buddy while you review. Coming in week 3.",
+    Workspace: "Tasks, scheduling, team coordination and progress-based companion chat.",
   }[page];
 
-  if (!token) return <AuthScreen onAuth={setToken} />;
+  if (!token && page !== "Workspace") return <AuthScreen onAuth={setToken} />;
 
   return (
     <div className="app">
@@ -309,6 +312,7 @@ export default function App() {
             only.
           </p>
         )}
+        {page === "Workspace" && <Workspace />}
         {page === "Home" && (
           <HomePage state={state} go={go} openLesson={openLesson} />
         )}

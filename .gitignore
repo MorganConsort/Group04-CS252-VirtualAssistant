@@ -40,3 +40,11 @@ data/local.db
 .env
 .env.*
 !.env.example
+
+# Scheduling Workspace local files
+*.db
+.env.*
+!.env.example
+*.db-shm
+*.db-wal
+.uv-cache/

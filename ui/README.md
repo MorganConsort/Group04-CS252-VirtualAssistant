@@ -137,3 +137,7 @@ reviewer names and roles, limitations, and the PR preparation checklist.
 https://www.figma.com/design/VG4biz9VR4o9dDg24Gl0BI
 
 High-fidelity context was retrieved for Home, weekly Schedule, selected lesson, Library, course Progress, Reporter, Physics request, balanced proposal, History approval, overload warning, and deferred confirmation. Figma's Starter API limit prevented retrieval of some alternate states, including the monthly calendar; those interactions reuse the retrieved components. No screenshot is used as an implementation asset. The Code Connect `Book` component was not present in this Python starter, so the shared navigation uses the Library glyph supplied by the Home design. Inter is bundled locally through `@fontsource/inter`.
+
+## Scheduling Workspace
+
+Open `/#workspace` for the optional account-backed task planner. Start `assistant.backend.main:app` on port 8000 first. Workspace has its own account/session flow, separate from the course demo login. `VITE_API_URL` selects this scheduling backend; the course check API keeps its existing configuration. See [the scheduling handoff](../docs/minh-handoff.md).
