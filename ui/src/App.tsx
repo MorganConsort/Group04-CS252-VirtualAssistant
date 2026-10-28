@@ -7,6 +7,7 @@ import { Button } from "./components/Button";
 import { Modal } from "./components/Modal";
 import { Navigation } from "./components/Navigation";
 import { courseFor } from "./demo/selectors";
+import { AppearancePicker } from "./features/appearance/AppearancePicker";
 import { LessonDialog } from "./features/learning-check/LessonDialog";
 import {
   balance,
@@ -440,6 +441,8 @@ export default function App() {
               Save preferences
             </button>
           </form>
+          <hr />
+          <AppearancePicker />
         </Modal>
       )}
       {modal === "notifications" && (
