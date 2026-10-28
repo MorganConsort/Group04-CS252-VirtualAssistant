@@ -23,6 +23,8 @@ from .models import (
 from .scheduler import WorkItem, build_plan, minutes
 from .schemas import PlanRequest, ReportOut
 
+REMINDER_LEAD = timedelta(minutes=15)
+
 
 def serialize_schedule_changes(handler):
     """SQLite has no row locks; share the planner lock across related mutations."""
@@ -173,7 +175,7 @@ def make_plan(db: Session, user: User, data: PlanRequest, now: datetime):
             db.execute(
                 delete(ScheduleEntry).where(ScheduleEntry.id.in_(replaceable_ids))
             )
-        db.add_all(
+        rows = [
             ScheduleEntry(
                 user_id=user.id,
                 task_id=entry.task_id,
@@ -181,10 +183,28 @@ def make_plan(db: Session, user: User, data: PlanRequest, now: datetime):
                 ends_at=entry.ends_at,
             )
             for entry in plan.entries
+        ]
+        db.add_all(rows)
+        db.flush()
+        titles = {task.id: task.title for task in tasks}
+        zone = ZoneInfo(user.timezone)
+        # Reminders are written now and become visible (created_at) 15 minutes before
+        # the session, so reading notifications never writes. Deleting or replanning
+        # a session removes its reminder through the ON DELETE CASCADE foreign key.
+        db.add_all(
+            Notification(
+                user_id=user.id,
+                entry_id=row.id,
+                created_at=row.starts_at - REMINDER_LEAD,
+                message=f"{titles[row.task_id]} starts at "
+                f"{row.starts_at.astimezone(zone):%H:%M} ({user.timezone}).",
+            )
+            for row in rows
         )
         db.add(
             Notification(
                 user_id=user.id,
+                created_at=now,
                 message="Your schedule has been updated. Review the new plan.",
             )
         )
@@ -219,9 +239,12 @@ def progress_report(db: Session, user: User, start_date):
             ScheduleEntry.ends_at > start,
         )
     ).all()
+    # Missed sessions are counted in missed_sessions; their replanned copies would
+    # otherwise count the same work twice.
     planned = sum(
         minutes(max(entry.starts_at, start), min(entry.ends_at, end))
         for entry in entries
+        if entry.status != "missed"
     )
     completed = sum(
         entry.actual_minutes

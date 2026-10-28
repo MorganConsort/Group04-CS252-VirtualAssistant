@@ -17,6 +17,19 @@ EXPECTED_TABLES = {
     "cards",
     "reviews",
     "companion_events",
+    # Scheduling workspace (migration 0002).
+    "auth_sessions",
+    "goals",
+    "teams",
+    "memberships",
+    "invitations",
+    "tasks",
+    "availability",
+    "busy_blocks",
+    "schedule_entries",
+    "notifications",
+    "chat_messages",
+    "alembic_version",
 }
 
 
@@ -90,11 +103,11 @@ def insert_concept(
     )
 
 
-def test_init_db_creates_all_nine_tables(database_url):
+def test_init_db_creates_all_tables(database_url):
     tables = init_db(database_url=database_url, reset=True)
 
     assert set(tables) == EXPECTED_TABLES
-    assert len(tables) == 9
+    assert len(tables) == len(EXPECTED_TABLES)
     assert set(inspect(get_engine(database_url)).get_table_names()) == EXPECTED_TABLES
 
 

@@ -11,12 +11,12 @@ Dưới đây là các hạng mục công việc cần hoàn thiện:
   - **Nguồn**: `db/schema.sql` (9 bảng); `python dev.py db init` tạo DB local.
   - **Migration**: Alembic, `DATABASE_URL` từ env; `0001_initial`.
   - **ADR**: `docs/adr/001-database.md`.
-- [ ] **Task 2: FastAPI + ingest PDF (#13, Minh, 10 giờ, xong thứ Tư)**
+- [x] **Task 2: FastAPI + ingest PDF (#13, Minh, 10 giờ, xong thứ Tư)**
   - **Endpoint**: `GET /api/v1/health`, `POST /api/v1/courses`, `POST /api/v1/courses/{id}/sources`.
   - **Kiểm tra đầu vào**: đuôi + magic bytes `%PDF`, ≤ 20 MB, `pypdf` đọc được.
   - **Lưu**: một dòng mỗi trang, trang bắt đầu từ 1; cảnh báo `scanned_pdf` nếu > 80% trang rỗng.
-- [ ] **Task 3: Auth (#14, Thịnh, 10 giờ, xong thứ Năm)**
-  - **Đăng ký/đăng nhập**: argon2, JWT 60 phút, khóa tạm sau 5 lần sai.
+- [x] **Task 3: Auth (#14, Thịnh, 10 giờ, xong thứ Năm)**
+  - **Đăng ký/đăng nhập**: argon2, session 60 phút, khóa tạm sau 5 lần sai. *Thực tế: session opaque phía server (chỉ lưu SHA-256 của token) thay cho JWT, để logout thu hồi được ngay; xem Hạn chế.*
   - **Phân quyền**: mọi truy vấn lọc theo `owner_id`; tài nguyên người khác → 404.
   - **Chuẩn bị age gate**: lưu `birth_year`, `account_level`, `adult_verified = 0`.
 
@@ -54,7 +54,10 @@ Dưới đây là các hạng mục công việc cần hoàn thiện:
 | Tạo course | ✅ | — | ❌ 401 |
 | Upload source vào course | ✅ | ❌ 404 | ❌ 401 |
 | Đọc sources / concepts / items | ✅ | ❌ 404 | ❌ 401 |
-| `GET /health` | ✅ | ✅ | ✅ |
+| Sửa profile, chọn companion mode | ✅ (`girlfriend`: chỉ adult đã xác minh) | — | ❌ 401 |
+| Đọc goal / task / lịch / chat của mình | ✅ | ❌ 404 | ❌ 401 |
+| Đọc task của team | ✅ thành viên | ❌ 404 nếu không phải thành viên | ❌ 401 |
+| `GET /api/v1/health` | ✅ | ✅ | ✅ |
 
 ## 🤝 Phối hợp với role khác
 
@@ -71,12 +74,24 @@ Dưới đây là các hạng mục công việc cần hoàn thiện:
 
 | File | Số trang | Trang rỗng | Thời gian (giây) | Ghi chú |
 |---|---:|---:|---:|---|
+| `CSC10014_2026_Week01_Problem_Framing.pdf` | 146 | 0 | 3.2 | 201 processed |
+| `CSC10014_2026_Week02_Decomposition_UseCases.pdf` | 80 | 0 | 8.8 | 201 processed |
+| `CSC10014_2026_Week03_Pitfalls_Pipelines_Decomposition-Final.pdf` | 83 | 0 | 8.1 | 201 processed |
+| `CSC10014_2026_Git_GitHub_Tutorial.docx.pdf` | 78 | 0 | 21.2 | 201 processed; chậm nhất, gần ngưỡng 30 giây |
+
+Đo ngày 28/10/2026 qua `POST /api/v1/courses/{id}/sources` (TestClient, SQLite tạm, laptop Windows của nhóm); file PDF không được commit. Thời gian chủ yếu là `pypdf.extract_text()`.
+
+**Kiểm thử**: `tests/test_ingest.py` (3 trang → 3 dòng, 400/413/415, upload lại, `scanned_pdf`, quyền) và `tests/test_auth.py` (đăng ký hợp lệ, trùng email 409, mật khẩu yếu 422, sai mật khẩu 401, khóa sau 5 lần 429, session hết hạn 401, user A đọc course user B → 404, log không chứa mật khẩu/token, age gate).
 
 ### Hạn chế & Hướng cải thiện
 | # | Hạn chế | Hướng cải thiện |
 |---|---|---|
 | 1 | PDF chỉ có ảnh không trích được chữ | OCR ở tuần 2 |
-| 2 | JWT chưa có refresh token | Thêm refresh token trước khi mở pilot (tuần 5) |
+| 2 | Session hết hạn sau 60 phút, chưa có refresh | Thêm refresh/“remember me” trước khi mở pilot (tuần 5) |
+| 3 | Dùng session phía server thay JWT: mỗi request tra bảng `auth_sessions` | Chấp nhận được ở quy mô lớp học; đổi đi nếu cần stateless |
+| 4 | Khóa đăng nhập đếm số lần sai liên tiếp, không theo cửa sổ trượt 15 phút | Thêm cột thời điểm sai đầu tiên nếu cần đúng spec |
+| 5 | Email chưa được xác minh; lời mời nhóm cần thêm mã mời | Xác minh email khi có dịch vụ gửi mail |
+| 6 | Giới hạn upload dựa vào `Content-Length` (thiếu → 411) | Đặt thêm giới hạn body ở reverse proxy khi deploy (#18) |
 
 ## 📂 Codebase Guidelines
 - API trong `src/app/api/`, logic ingest trong `src/app/ingest/`, kết nối DB trong `src/app/db.py`.

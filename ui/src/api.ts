@@ -1,5 +1,9 @@
 /** The real workspace API. Session credentials stay in this tab's sessionStorage. */
-export type User = { id: string; name: string; email: string; timezone: string; personality: string };
+export type User = {
+  id: string; name: string; email: string; timezone: string; personality: string;
+  role: string; account_level: "university" | "k12"; birth_year: number | null;
+  companion_mode: "off" | "buddy" | "mentor" | "girlfriend";
+};
 export type Auth = { access_token: string; expires_at: string; user: User };
 export type Goal = { id: string; title: string; description: string; due_at: string | null };
 export type Task = {
