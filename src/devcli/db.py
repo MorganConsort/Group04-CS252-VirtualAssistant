@@ -7,8 +7,6 @@ import re
 import subprocess
 from pathlib import Path
 
-from app.db import get_database_url
-from app.db import init_db as init_database
 from devcli import ROOT
 
 LOCAL_DB = ROOT / "data" / "local.db"
@@ -24,6 +22,8 @@ SECRET_PATTERNS = {
 
 def init_db(path: Path, reset: bool = False) -> list[str]:
     """Create the schema in a SQLite file and return the table names."""
+    from app.db import init_db as init_database
+
     database_url = f"sqlite:///{Path(path).resolve().as_posix()}"
     return init_database(reset=reset, database_url=database_url)
 
@@ -41,6 +41,9 @@ def tracked_files() -> list[Path]:
 
 
 def _init(args: argparse.Namespace) -> int:
+    from app.db import get_database_url
+    from app.db import init_db as init_database
+
     if args.db:
         path = Path(args.db)
         database_url = f"sqlite:///{path.resolve().as_posix()}"
