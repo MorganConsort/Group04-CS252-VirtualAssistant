@@ -1,4 +1,6 @@
+# -*- coding: utf-8 -*-  (để pip trên Windows đọc được tiếng Việt)
 # Thư viện của dự án. Cài: pip install -r requirements.txt (trong venv)
+# LLM chạy local thay cho API key (chưa dùng được): xem requirements-local.txt.
 # Phiên bản dùng "~=" (cho phép bản vá và bản nhỏ, không nhảy major).
 
 # --- Backend API (#13, #14) ---
