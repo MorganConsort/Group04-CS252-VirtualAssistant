@@ -16,6 +16,7 @@ import {
 } from "./model";
 import { currentCourse } from "./api/mock";
 import { AuthScreen } from "./components/AuthScreen";
+import { CoursesPage } from "./pages/CoursesPage";
 
 type Page =
   | "Home"
@@ -315,7 +316,7 @@ export default function App() {
     Schedule: "Your learning schedule",
     Progress: `${activeCourse.name} · Course progress`,
     "AI Reporter": "AI learning assistant",
-    Library: "Explore the learning library",
+    Library: `Courses · ${currentCourse.name}`,
     Companion: "Companion",
   }[page];
   const subtitle = {
@@ -326,7 +327,7 @@ export default function App() {
     "AI Reporter":
       "Ask questions, report difficulties, and reshape your plan together.",
     Library:
-      "Choose a curated module. Your AI coach checks prerequisites before enrollment.",
+      "Upload your slides, confirm the concepts, then add modules from the sample library.",
     Companion: "Your study buddy while you review. Coming in week 3.",
   }[page];
   const start = addDays(anchor, -((anchor.getDay() + 6) % 7));
@@ -499,7 +500,7 @@ export default function App() {
                 setModal("settings");
               }}
             >
-              ◯
+              <span className="avatar" aria-hidden="true" />
             </button>
           </div>
         </header>
@@ -800,6 +801,8 @@ export default function App() {
         )}
         {page === "Library" && (
           <>
+            <CoursesPage courseId={currentCourse.id} />
+            <h2 className="section-title">Sample library</h2>
             <input
               className="search"
               aria-label="Search modules"
