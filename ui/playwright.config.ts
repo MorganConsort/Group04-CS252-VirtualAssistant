@@ -40,7 +40,7 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: "pnpm exec vite --host 127.0.0.1 --port 5178 --strictPort",
+      command: "npx --no-install vite --host 127.0.0.1 --port 5178 --strictPort",
       url: "http://127.0.0.1:5178",
       reuseExistingServer: false,
       // Explicit modes: a developer's ui/.env.local must not switch the suites.
@@ -51,7 +51,7 @@ export default defineConfig({
       },
     },
     {
-      command: "pnpm exec vite --host 127.0.0.1 --port 5179 --strictPort",
+      command: "npx --no-install vite --host 127.0.0.1 --port 5179 --strictPort",
       url: "http://127.0.0.1:5179",
       reuseExistingServer: false,
       env: {
@@ -62,7 +62,7 @@ export default defineConfig({
       },
     },
     {
-      command: "pnpm exec vite --host 127.0.0.1 --port 5180 --strictPort",
+      command: "npx --no-install vite --host 127.0.0.1 --port 5180 --strictPort",
       url: "http://127.0.0.1:5180",
       reuseExistingServer: false,
       env: {
