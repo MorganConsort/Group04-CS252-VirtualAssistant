@@ -122,7 +122,11 @@ class GeminiClient(LLMClient):
             raise
         except httpx.TransportError as e:
             raise RetryableError(f"Gemini network error: {type(e).__name__}: {e}") from e
-        usage = resp.usage_metadata
+        usage = getattr(resp, "usage_metadata", None)
         # Thinking tokens are billed as output.
-        output_tokens = (usage.candidates_token_count or 0) + (usage.thoughts_token_count or 0)
-        return (resp.text or "", usage.prompt_token_count or 0, output_tokens)
+        output_tokens = (
+            (getattr(usage, "candidates_token_count", 0) or 0)
+            + (getattr(usage, "thoughts_token_count", 0) or 0)
+        ) if usage else 0
+        prompt_tokens = (getattr(usage, "prompt_token_count", 0) or 0) if usage else 0
+        return (resp.text or "", prompt_tokens, output_tokens)
