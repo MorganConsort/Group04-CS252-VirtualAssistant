@@ -24,6 +24,9 @@ export const ERRORS = {
   invalid_pdf: "This PDF is damaged or cannot be opened.",
   scanned_pdf:
     "No readable text in this file. You can paste the page content instead.",
+  concepts_unavailable:
+    "The AI could not read this file right now (busy or out of daily quota). Try again later.",
+  upload_in_progress: "This file is already being uploaded. Wait for it to finish.",
   cycle: "This link would create a loop. Remove one link first.",
 } as const;
 
