@@ -24,4 +24,6 @@ class RetryableError(Exception):
 class LLMClient(ABC):
     @abstractmethod
     def complete(self, prompt: str, *, system: str = "", json_schema: dict | None = None,
-                 max_tokens: int = 1024, temperature: float = 0.2) -> LLMResult: ...
+                 max_tokens: int = 1024, temperature: float = 0.2,
+                 pdf: bytes | None = None) -> LLMResult:
+        """``pdf`` is a PDF document the model reads along with the prompt (vision models)."""

@@ -70,17 +70,20 @@ def _concepts(args: argparse.Namespace) -> int:
     from dotenv import load_dotenv
 
     from app.concepts.extract import extract_concepts
-    from app.llm import get_client
+    from app.concepts.visual import read_visuals
+    from app.llm import get_client, get_vision_client
     from assistant.backend.ingest import InvalidPdf, extract_pages
 
     load_dotenv(ROOT / ".env")  # LLM_PROVIDER / LLM_API_KEY; real env vars win
     path = Path(args.file)
     try:
-        pages = extract_pages(path.read_bytes())
+        data = path.read_bytes()
+        pages = extract_pages(data)
     except (OSError, InvalidPdf) as exc:
         print(f"Không đọc được {path}: {exc}")
         return 1
-    concepts = extract_concepts(get_client(), pages)
+    visuals = read_visuals(get_vision_client(), data, len(pages))
+    concepts = extract_concepts(get_client(), pages, visuals)
     if args.json:
         print(json.dumps(concepts, ensure_ascii=False, indent=2))
         return 0

@@ -8,7 +8,8 @@ from sqlalchemy import delete, select, text
 from sqlalchemy.exc import IntegrityError
 
 from app.concepts.extract import extract_concepts, save_concepts
-from app.llm import LLMClient, get_client
+from app.concepts.visual import read_visuals
+from app.llm import LLMClient, get_client, get_vision_client
 
 from .dependencies import DB, CurrentUser
 from .ingest import MAX_UPLOAD_BYTES, InvalidPdf, extract_pages, looks_scanned
@@ -51,7 +52,13 @@ def list_sources(course_id: str, db: DB, user: CurrentUser):
 
 
 @router.post("/courses/{course_id}/sources", response_model=UploadOut, status_code=201)
-def upload_source(course_id: str, file: UploadFile, db: DB, user: CurrentUser):
+def upload_source(
+    course_id: str,
+    file: UploadFile,
+    db: DB,
+    user: CurrentUser,
+    vision: Annotated[LLMClient, Depends(get_vision_client)],
+):
     owned_course(db, course_id, user.id)
     # Browsers may send a Windows path; keep only the base name.
     name = (file.filename or "").replace("\\", "/").rsplit("/", 1)[-1].strip()
@@ -68,13 +75,21 @@ def upload_source(course_id: str, file: UploadFile, db: DB, user: CurrentUser):
         pages = extract_pages(data)
     except InvalidPdf:
         raise HTTPException(400, "invalid_pdf") from None
+    # A re-upload revises the notes kept from last time; a failed chunk keeps them.
+    previous = [""] * len(pages)
+    for number, note in db.execute(select(Source.page, Source.visual_notes).where(
+            Source.course_id == course_id, Source.file_name == name)):
+        if number <= len(pages):
+            previous[number - 1] = note or ""
+    notes = read_visuals(vision, data, len(pages), previous)
     # Re-uploading the same file name replaces its pages.
     db.execute(
         delete(Source).where(Source.course_id == course_id, Source.file_name == name)
     )
     db.add_all(
-        Source(course_id=course_id, file_name=name, page=number, text=text)
-        for number, text in enumerate(pages, start=1)
+        Source(course_id=course_id, file_name=name, page=number, text=text,
+               visual_notes=note or None)
+        for number, (text, note) in enumerate(zip(pages, notes, strict=True), start=1)
     )
     try:
         db.commit()
@@ -99,19 +114,27 @@ def propose_concepts(
 ):
     """Extract concepts from uploaded pages (one file, or every file) and store them unconfirmed."""
     owned_course(db, course_id, user.id)
-    query = select(Source.file_name, Source.text).where(Source.course_id == course_id)
+    query = select(Source.file_name, Source.text, Source.visual_notes).where(
+        Source.course_id == course_id)
     if file_name is not None:
         query = query.where(Source.file_name == file_name)
-    decks: dict[str, list[str]] = {}
-    for name, page_text in db.execute(query.order_by(Source.file_name, Source.page)):
-        decks.setdefault(name, []).append(page_text)
+    decks: dict[str, tuple[list[str], list[str]]] = {}
+    for name, page_text, note in db.execute(query.order_by(Source.file_name, Source.page)):
+        pages, notes = decks.setdefault(name, ([], []))
+        pages.append(page_text)
+        notes.append(note or "")
     if not decks:
         raise HTTPException(404, "no_sources")
-    for pages in decks.values():
-        concepts = extract_concepts(llm, pages)
+    # A re-run revises what was proposed before rather than starting over.
+    previous = [{**row, "source_pages": json.loads(row["source_pages"] or "[]")}
+                for row in db.execute(text(
+                    "SELECT slug, title, summary, source_pages FROM concepts "
+                    "WHERE course_id = :course_id"), {"course_id": course_id}).mappings()]
+    for pages, notes in decks.values():
+        concepts = extract_concepts(llm, pages, notes, previous)
         # shortcut: a deck with text but no concepts means every LLM call failed (quota,
         # network, bad JSON); report it rather than look like an empty deck.
-        if not concepts and any(pages):
+        if not concepts and (any(pages) or any(notes)):
             raise HTTPException(503, "concepts_unavailable")
         save_concepts(db, course_id, concepts)
     try:
