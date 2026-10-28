@@ -6,7 +6,24 @@ React + TypeScript frontend for the CS252 study assistant. The Python CLI stays 
 
 Pathly is a responsive browser application built with React, TypeScript, and Vite. Development is supported on Windows, macOS, and Linux. The finished static build runs in current versions of Chrome, Edge, Firefox, and Safari, including mobile browsers. It is not currently a native Windows, Android, or iOS application.
 
-This prototype has no backend, user accounts, cloud synchronization, database, or real AI service. Its data stays in the current browser's local storage.
+The original five course pages use browser-local demo data. The **Workspace** page connects
+to the FastAPI backend and uses accounts, persistent tasks, scheduling, teams and companion chat.
+See [the backend handoff](../docs/minh-handoff.md) for backend setup.
+
+## Connected Workspace
+
+Start the backend at `http://127.0.0.1:8000`, start this UI, then choose **Workspace** in the sidebar.
+Create an account with a password of at least 10 characters. Add tasks and availability,
+preview a schedule, and explicitly save the proposal. Check-in becomes available at the session start.
+Preview reports past unchecked sessions; saving marks them missed and schedules the remaining work.
+If the proposal's start time has passed, Save refreshes it for another review before committing.
+Use Team for invitations, shared tasks and common free time; Companion uses your real task progress.
+
+The session token lasts for the current browser tab and is revoked on sign-out. Workspace data
+stays in the server database. Copy `ui/.env.example` to `ui/.env` and change `VITE_API_URL`
+if the backend runs elsewhere; restart Vite after changing it. Only the backend receives LLM keys.
+Dates entered in forms use the device timezone; saved dates include an offset and the calendar
+displays your profile timezone. Reminders refresh every 30 seconds while Workspace is open.
 
 ## Requirements
 
@@ -16,7 +33,8 @@ This prototype has no backend, user accounts, cloud synchronization, database, o
 - Internet access for the initial download and dependency installation
 - Git only when cloning; it is not required when using a ZIP download
 
-Python, Docker, API keys, and a database are not required for the UI.
+Python, Docker, API keys, and a database are not required for the five course demo pages.
+Workspace requires the Python backend; SQLite is included with Python.
 
 ## Download
 
@@ -79,7 +97,7 @@ npm run preview
 
 ## Prototype boundaries
 
-No API keys, backend, database, or real LLM are needed. AI replies are deterministic examples, prerequisite confirmation is self-reported, schedule topics are sample data, and workload uses an illustrative 3 hours per active course estimate. Weekly budget adjustment resizes existing planned sessions (10–60 minutes), not a scheduling optimizer. English has four sample grammar questions; other modules use a clearly labeled workflow check. Progress milestones are illustrative, while the completion counter tracks local demo checks. The initial English goal begins at 6/14 verified lessons.
+For the five course demo pages: AI replies are deterministic examples, prerequisite confirmation is self-reported, schedule topics are sample data, and workload uses an illustrative 3 hours per active course estimate. Weekly budget adjustment resizes existing planned sessions (10–60 minutes). English has four sample grammar questions; other modules use a clearly labeled workflow check. Progress milestones are illustrative, while the completion counter tracks local demo checks. The initial English goal begins at 6/14 verified lessons.
 
 State is stored under `pathly.demo.v1` in browser localStorage, not an account. Lesson scratch notes last only while the dialog is open. Removing that storage key resets the demo. Saved demo schedules are rebased when the date changes so the relative calendar remains usable.
 
@@ -89,6 +107,8 @@ State is stored under `pathly.demo.v1` in browser localStorage, not an account. 
 - `src/App.tsx`: navigation, page views, controlled forms, lesson dialogs, and scripted coaching flows.
 - `src/styles.css`: shared Figma colors, typography, cards, sidebar, responsive layouts.
 - `src/model.test.ts`: progress, future-plan, enrollment, and workload invariants.
+- `src/Workspace.tsx`: account-backed planning, tasks, team workspaces, reminders and companion chat.
+- `src/api.ts`: typed backend transport, bearer sessions, timeouts and API errors.
 
 ## Design source
 

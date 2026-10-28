@@ -25,3 +25,12 @@ dist/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Local backend data and credentials
+.env
+.env.*
+!.env.example
+*.db
+*.db-shm
+*.db-wal
+.uv-cache/

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import Workspace from "./Workspace";
 import {
   courses,
   dateKey,
@@ -15,7 +16,7 @@ import {
   type Session,
 } from "./model";
 
-type Page = "Home" | "Schedule" | "Progress" | "AI Reporter" | "Library";
+type Page = "Home" | "Schedule" | "Progress" | "AI Reporter" | "Library" | "Workspace";
 type Proposal = {
   kind: "enroll" | "balance";
   courseId?: string;
@@ -28,8 +29,9 @@ const pages: Page[] = [
   "Progress",
   "AI Reporter",
   "Library",
+  "Workspace",
 ];
-const icons = ["▦", "▤", "◉", "✦", "▣"];
+const icons = ["▦", "▤", "◉", "✦", "▣", "◷"];
 const courseFor = (id: string) => courses.find((c) => c.id === id)!;
 const formatted = (d: Date) =>
   d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -142,13 +144,15 @@ export default function App() {
     }
   }, [state]);
   useEffect(() => {
-    const handler = () =>
+    const handler = () => {
+      if (location.hash === "#main") return;
       setPage(
         pages.find(
           (p) =>
             p.toLowerCase().replaceAll(" ", "-") === location.hash.slice(1),
         ) || "Home",
       );
+    };
     window.addEventListener("hashchange", handler);
     return () => window.removeEventListener("hashchange", handler);
   }, []);
@@ -298,6 +302,7 @@ export default function App() {
     Progress: `${activeCourse.name} · Course progress`,
     "AI Reporter": "AI learning assistant",
     Library: "Explore the learning library",
+    Workspace: "Your study workspace",
   }[page];
   const subtitle = {
     Home: "One step at a time. Here's your learning plan for today.",
@@ -308,6 +313,7 @@ export default function App() {
       "Ask questions, report difficulties, and reshape your plan together.",
     Library:
       "Choose a curated module. Your AI coach checks prerequisites before enrollment.",
+    Workspace: "Plan your tasks, coordinate with your team, and talk with your study companion.",
   }[page];
   const start = addDays(anchor, -((anchor.getDay() + 6) % 7));
   const calendarDays =
@@ -403,7 +409,7 @@ export default function App() {
             </button>
           ))}
         </nav>
-        <section className="goals">
+        {page !== "Workspace" && <section className="goals">
           <div>CURRENT GOALS · {state.active.length}</div>
           {state.active.map((id) => (
             <button
@@ -417,8 +423,8 @@ export default function App() {
               <b>{progress(state, id)}%</b>
             </button>
           ))}
-        </section>
-        <div className="sidebar-bottom">
+        </section>}
+        {page !== "Workspace" && <div className="sidebar-bottom">
           <button
             onClick={() => {
               setSettingsName(state.name);
@@ -439,9 +445,9 @@ export default function App() {
             <span className="avatar" />
             Student account
           </button>
-        </div>
+        </div>}
       </aside>
-      <main id="main">
+      <main id="main" tabIndex={-1}>
         <header className="topbar">
           <button
             className="mobile-menu icon-button"
@@ -459,7 +465,7 @@ export default function App() {
               day: "numeric",
             })}
           </span>
-          <div>
+          {page === "Workspace" ? <span className="demo-label">Personal &amp; team planning</span> : <div>
             <span className="demo-label">Interactive demo</span>
             <button
               className="icon-button"
@@ -479,13 +485,13 @@ export default function App() {
             >
               ◯
             </button>
-          </div>
+          </div>}
         </header>
         <div className="page-heading">
           <h1>{title}</h1>
           <p>{subtitle}</p>
         </div>
-        {storageError && (
+        {storageError && page !== "Workspace" && (
           <p role="alert" className="warning">
             Browser storage is unavailable. Changes will last for this visit
             only.
@@ -1140,6 +1146,7 @@ export default function App() {
             </aside>
           </div>
         )}
+        {page === "Workspace" && <Workspace />}
       </main>
       {notice && (
         <div className="toast" role="status">
