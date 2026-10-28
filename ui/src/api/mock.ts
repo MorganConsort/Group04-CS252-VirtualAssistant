@@ -3,7 +3,7 @@ import { backendEnabled, call, session } from "./backend";
 
 export const currentCourse = {
   id: "csc10014",
-  name: "CSC10014 · Computational Thinking",
+  name: "CS252 - Computational Thinking",
 };
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
