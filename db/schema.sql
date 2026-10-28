@@ -16,7 +16,11 @@ CREATE TABLE IF NOT EXISTS users (
     adult_verified         INTEGER NOT NULL DEFAULT 0,
     failed_login_attempts  INTEGER NOT NULL DEFAULT 0,
     locked_until           TEXT,
-    created_at             TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at             TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    -- Scheduling workspace profile (migration 0002).
+    name                   VARCHAR(80) NOT NULL DEFAULT '',
+    timezone               VARCHAR(64) NOT NULL DEFAULT 'Asia/Ho_Chi_Minh',
+    personality            VARCHAR(16) NOT NULL DEFAULT 'warm'  -- warm | direct | playful
 );
 
 CREATE TABLE IF NOT EXISTS courses (
@@ -103,3 +107,138 @@ CREATE TABLE IF NOT EXISTS companion_events (
 );
 
 CREATE INDEX IF NOT EXISTS idx_reviews_user ON reviews (user_id, reviewed_at);
+
+-- ---------------------------------------------------------------------------
+-- Scheduling workspace and companion (migration 0002_scheduling_workspace).
+-- Timestamps are naive UTC; the backend converts at its boundary.
+-- ---------------------------------------------------------------------------
+
+-- Revocable bearer sessions; only the SHA-256 of the token is stored.
+CREATE TABLE IF NOT EXISTS auth_sessions (
+    token_hash  VARCHAR(64) PRIMARY KEY,
+    user_id     TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    expires_at  TIMESTAMP NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ix_auth_sessions_user_id ON auth_sessions (user_id);
+
+CREATE TABLE IF NOT EXISTS goals (
+    id           VARCHAR(36) PRIMARY KEY,
+    created_at   TIMESTAMP NOT NULL,
+    owner_id     TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title        VARCHAR(200) NOT NULL,
+    description  TEXT NOT NULL,
+    due_at       TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS ix_goals_owner_id ON goals (owner_id);
+
+CREATE TABLE IF NOT EXISTS teams (
+    id          VARCHAR(36) PRIMARY KEY,
+    created_at  TIMESTAMP NOT NULL,
+    owner_id    TEXT NOT NULL REFERENCES users(id),
+    name        VARCHAR(100) NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ix_teams_owner_id ON teams (owner_id);
+
+CREATE TABLE IF NOT EXISTS memberships (
+    team_id  VARCHAR(36) NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+    user_id  TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    PRIMARY KEY (team_id, user_id)
+);
+
+-- Joining needs the matching email AND the out-of-band code (token_hash).
+CREATE TABLE IF NOT EXISTS invitations (
+    id          VARCHAR(36) PRIMARY KEY,
+    created_at  TIMESTAMP NOT NULL,
+    team_id     VARCHAR(36) NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+    email       VARCHAR(254) NOT NULL,
+    token_hash  VARCHAR(64) NOT NULL,
+    accepted    BOOLEAN NOT NULL,
+    UNIQUE (team_id, email)
+);
+CREATE INDEX IF NOT EXISTS ix_invitations_team_id ON invitations (team_id);
+
+CREATE TABLE IF NOT EXISTS tasks (
+    id                 VARCHAR(36) PRIMARY KEY,
+    created_at         TIMESTAMP NOT NULL,
+    owner_id           TEXT NOT NULL REFERENCES users(id),
+    assignee_id        TEXT NOT NULL REFERENCES users(id),
+    goal_id            VARCHAR(36) REFERENCES goals(id) ON DELETE SET NULL,
+    team_id            VARCHAR(36) REFERENCES teams(id),
+    title              VARCHAR(200) NOT NULL,
+    description        TEXT NOT NULL,
+    duration_minutes   INTEGER NOT NULL CHECK (duration_minutes > 0),
+    completed_minutes  INTEGER NOT NULL,
+    priority           INTEGER NOT NULL CHECK (priority BETWEEN 1 AND 3),
+    due_at             TIMESTAMP NOT NULL,
+    status             VARCHAR(16) NOT NULL,                     -- pending | completed | cancelled
+    CHECK (completed_minutes >= 0 AND completed_minutes <= duration_minutes)
+);
+CREATE INDEX IF NOT EXISTS ix_tasks_owner_id ON tasks (owner_id);
+CREATE INDEX IF NOT EXISTS ix_tasks_assignee_id ON tasks (assignee_id);
+CREATE INDEX IF NOT EXISTS ix_tasks_team_id ON tasks (team_id);
+CREATE INDEX IF NOT EXISTS ix_tasks_assignee_status_due ON tasks (assignee_id, status, due_at);
+
+CREATE TABLE IF NOT EXISTS availability (
+    id          VARCHAR(36) PRIMARY KEY,
+    created_at  TIMESTAMP NOT NULL,
+    user_id     TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    starts_at   TIMESTAMP NOT NULL,
+    ends_at     TIMESTAMP NOT NULL,
+    CHECK (ends_at > starts_at)
+);
+CREATE INDEX IF NOT EXISTS ix_availability_user_id ON availability (user_id);
+
+CREATE TABLE IF NOT EXISTS busy_blocks (
+    id          VARCHAR(36) PRIMARY KEY,
+    created_at  TIMESTAMP NOT NULL,
+    user_id     TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    starts_at   TIMESTAMP NOT NULL,
+    ends_at     TIMESTAMP NOT NULL,
+    title       VARCHAR(200) NOT NULL,
+    CHECK (ends_at > starts_at)
+);
+CREATE INDEX IF NOT EXISTS ix_busy_blocks_user_id ON busy_blocks (user_id);
+
+CREATE TABLE IF NOT EXISTS schedule_entries (
+    id              VARCHAR(36) PRIMARY KEY,
+    created_at      TIMESTAMP NOT NULL,
+    user_id         TEXT NOT NULL REFERENCES users(id),
+    task_id         VARCHAR(36) NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+    starts_at       TIMESTAMP NOT NULL,
+    ends_at         TIMESTAMP NOT NULL,
+    status          VARCHAR(16) NOT NULL,                        -- planned | completed | missed
+    actual_minutes  INTEGER NOT NULL,
+    CHECK (ends_at > starts_at)
+);
+CREATE INDEX IF NOT EXISTS ix_schedule_entries_user_id ON schedule_entries (user_id);
+CREATE INDEX IF NOT EXISTS ix_schedule_entries_task_id ON schedule_entries (task_id);
+CREATE INDEX IF NOT EXISTS ix_schedule_user_status_start ON schedule_entries (user_id, status, starts_at);
+
+-- created_at is when the notification becomes visible (reminders: 15 min before).
+CREATE TABLE IF NOT EXISTS notifications (
+    id          VARCHAR(36) PRIMARY KEY,
+    created_at  TIMESTAMP NOT NULL,
+    user_id     TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    entry_id    VARCHAR(36) UNIQUE REFERENCES schedule_entries(id) ON DELETE CASCADE,
+    message     VARCHAR(500) NOT NULL,
+    read        BOOLEAN NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ix_notifications_user_id ON notifications (user_id);
+
+CREATE TABLE IF NOT EXISTS chat_messages (
+    id          VARCHAR(36) PRIMARY KEY,
+    created_at  TIMESTAMP NOT NULL,
+    user_id     TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    role        VARCHAR(16) NOT NULL,                            -- user | assistant
+    content     TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ix_chat_messages_user_id ON chat_messages (user_id);
+
+-- Mark this schema as the latest migration so `alembic upgrade head` (and the
+-- backend at startup) accept a database created from this file.
+CREATE TABLE IF NOT EXISTS alembic_version (
+    version_num VARCHAR(32) NOT NULL PRIMARY KEY
+);
+INSERT INTO alembic_version (version_num)
+SELECT '0002_scheduling_workspace'
+WHERE NOT EXISTS (SELECT 1 FROM alembic_version);

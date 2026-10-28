@@ -1,18 +1,18 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Pathly Scheduling & AI Companion API",
-    "description": "CS252 Group 04 — Minh's Backend/Scheduler and AI integration. Register or log in, then use Authorize with the returned access_token.",
-    "version": "0.2.0"
+    "title": "Pathly Study Companion API",
+    "description": "CS252 Group 04 — courses and PDF ingest, accounts, scheduling workspace and AI companion. Register or log in, then use Authorize with the returned access_token.",
+    "version": "0.3.0"
   },
   "paths": {
-    "/api/auth/register": {
+    "/api/v1/auth/register": {
       "post": {
         "tags": [
           "Accounts"
         ],
         "summary": "Register",
-        "operationId": "register_api_auth_register_post",
+        "operationId": "register_api_v1_auth_register_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -47,13 +47,13 @@
         }
       }
     },
-    "/api/auth/login": {
+    "/api/v1/auth/login": {
       "post": {
         "tags": [
           "Accounts"
         ],
         "summary": "Login",
-        "operationId": "login_api_auth_login_post",
+        "operationId": "login_api_v1_auth_login_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -75,6 +75,9 @@
               }
             }
           },
+          "429": {
+            "description": "Too many failed attempts; retry later"
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -88,13 +91,13 @@
         }
       }
     },
-    "/api/auth/logout": {
+    "/api/v1/auth/logout": {
       "post": {
         "tags": [
           "Accounts"
         ],
         "summary": "Logout",
-        "operationId": "logout_api_auth_logout_post",
+        "operationId": "logout_api_v1_auth_logout_post",
         "responses": {
           "204": {
             "description": "Successful Response"
@@ -107,13 +110,13 @@
         ]
       }
     },
-    "/api/me": {
+    "/api/v1/me": {
       "get": {
         "tags": [
           "Accounts"
         ],
         "summary": "Profile",
-        "operationId": "profile_api_me_get",
+        "operationId": "profile_api_v1_me_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -137,7 +140,7 @@
           "Accounts"
         ],
         "summary": "Update Profile",
-        "operationId": "update_profile_api_me_patch",
+        "operationId": "update_profile_api_v1_me_patch",
         "requestBody": {
           "content": {
             "application/json": {
@@ -177,13 +180,193 @@
         ]
       }
     },
-    "/api/goals": {
+    "/api/v1/courses": {
+      "get": {
+        "tags": [
+          "Courses and sources"
+        ],
+        "summary": "List Courses",
+        "operationId": "list_courses_api_v1_courses_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CourseOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Courses Api V1 Courses Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Courses and sources"
+        ],
+        "summary": "Create Course",
+        "operationId": "create_course_api_v1_courses_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CourseCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourseOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/courses/{course_id}/sources": {
+      "get": {
+        "tags": [
+          "Courses and sources"
+        ],
+        "summary": "List Sources",
+        "operationId": "list_sources_api_v1_courses__course_id__sources_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SourceOut"
+                  },
+                  "title": "Response List Sources Api V1 Courses  Course Id  Sources Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Courses and sources"
+        ],
+        "summary": "Upload Source",
+        "operationId": "upload_source_api_v1_courses__course_id__sources_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Course Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_source_api_v1_courses__course_id__sources_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/goals": {
       "get": {
         "tags": [
           "Goals and tasks"
         ],
         "summary": "List Goals",
-        "operationId": "list_goals_api_goals_get",
+        "operationId": "list_goals_api_v1_goals_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -194,7 +377,7 @@
                     "$ref": "#/components/schemas/GoalOut"
                   },
                   "type": "array",
-                  "title": "Response List Goals Api Goals Get"
+                  "title": "Response List Goals Api V1 Goals Get"
                 }
               }
             }
@@ -211,7 +394,7 @@
           "Goals and tasks"
         ],
         "summary": "Create Goal",
-        "operationId": "create_goal_api_goals_post",
+        "operationId": "create_goal_api_v1_goals_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -251,13 +434,13 @@
         ]
       }
     },
-    "/api/goals/{goal_id}": {
+    "/api/v1/goals/{goal_id}": {
       "get": {
         "tags": [
           "Goals and tasks"
         ],
         "summary": "Get Goal",
-        "operationId": "get_goal_api_goals__goal_id__get",
+        "operationId": "get_goal_api_v1_goals__goal_id__get",
         "security": [
           {
             "HTTPBearer": []
@@ -302,7 +485,7 @@
           "Goals and tasks"
         ],
         "summary": "Update Goal",
-        "operationId": "update_goal_api_goals__goal_id__patch",
+        "operationId": "update_goal_api_v1_goals__goal_id__patch",
         "security": [
           {
             "HTTPBearer": []
@@ -357,7 +540,7 @@
           "Goals and tasks"
         ],
         "summary": "Delete Goal",
-        "operationId": "delete_goal_api_goals__goal_id__delete",
+        "operationId": "delete_goal_api_v1_goals__goal_id__delete",
         "security": [
           {
             "HTTPBearer": []
@@ -391,13 +574,13 @@
         }
       }
     },
-    "/api/tasks": {
+    "/api/v1/tasks": {
       "post": {
         "tags": [
           "Goals and tasks"
         ],
         "summary": "Create Task",
-        "operationId": "create_task_api_tasks_post",
+        "operationId": "create_task_api_v1_tasks_post",
         "security": [
           {
             "HTTPBearer": []
@@ -441,7 +624,7 @@
           "Goals and tasks"
         ],
         "summary": "List Tasks",
-        "operationId": "list_tasks_api_tasks_get",
+        "operationId": "list_tasks_api_v1_tasks_get",
         "security": [
           {
             "HTTPBearer": []
@@ -532,7 +715,7 @@
                   "items": {
                     "$ref": "#/components/schemas/TaskOut"
                   },
-                  "title": "Response List Tasks Api Tasks Get"
+                  "title": "Response List Tasks Api V1 Tasks Get"
                 }
               }
             }
@@ -550,13 +733,13 @@
         }
       }
     },
-    "/api/tasks/{task_id}": {
+    "/api/v1/tasks/{task_id}": {
       "get": {
         "tags": [
           "Goals and tasks"
         ],
         "summary": "Get Task",
-        "operationId": "get_task_api_tasks__task_id__get",
+        "operationId": "get_task_api_v1_tasks__task_id__get",
         "security": [
           {
             "HTTPBearer": []
@@ -601,7 +784,7 @@
           "Goals and tasks"
         ],
         "summary": "Update Task",
-        "operationId": "update_task_api_tasks__task_id__patch",
+        "operationId": "update_task_api_v1_tasks__task_id__patch",
         "security": [
           {
             "HTTPBearer": []
@@ -656,7 +839,7 @@
           "Goals and tasks"
         ],
         "summary": "Delete Task",
-        "operationId": "delete_task_api_tasks__task_id__delete",
+        "operationId": "delete_task_api_v1_tasks__task_id__delete",
         "security": [
           {
             "HTTPBearer": []
@@ -690,13 +873,13 @@
         }
       }
     },
-    "/api/availability": {
+    "/api/v1/availability": {
       "get": {
         "tags": [
           "Schedule"
         ],
         "summary": "Get Availability",
-        "operationId": "get_availability_api_availability_get",
+        "operationId": "get_availability_api_v1_availability_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -707,7 +890,7 @@
                     "$ref": "#/components/schemas/WindowOut"
                   },
                   "type": "array",
-                  "title": "Response Get Availability Api Availability Get"
+                  "title": "Response Get Availability Api V1 Availability Get"
                 }
               }
             }
@@ -724,7 +907,7 @@
           "Schedule"
         ],
         "summary": "Put Availability",
-        "operationId": "put_availability_api_availability_put",
+        "operationId": "put_availability_api_v1_availability_put",
         "requestBody": {
           "content": {
             "application/json": {
@@ -745,7 +928,7 @@
                     "$ref": "#/components/schemas/WindowOut"
                   },
                   "type": "array",
-                  "title": "Response Put Availability Api Availability Put"
+                  "title": "Response Put Availability Api V1 Availability Put"
                 }
               }
             }
@@ -768,13 +951,13 @@
         ]
       }
     },
-    "/api/busy-blocks": {
+    "/api/v1/busy-blocks": {
       "get": {
         "tags": [
           "Schedule"
         ],
         "summary": "List Busy Blocks",
-        "operationId": "list_busy_blocks_api_busy_blocks_get",
+        "operationId": "list_busy_blocks_api_v1_busy_blocks_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -785,7 +968,7 @@
                     "$ref": "#/components/schemas/BusyOut"
                   },
                   "type": "array",
-                  "title": "Response List Busy Blocks Api Busy Blocks Get"
+                  "title": "Response List Busy Blocks Api V1 Busy Blocks Get"
                 }
               }
             }
@@ -802,7 +985,7 @@
           "Schedule"
         ],
         "summary": "Create Busy Block",
-        "operationId": "create_busy_block_api_busy_blocks_post",
+        "operationId": "create_busy_block_api_v1_busy_blocks_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -842,13 +1025,13 @@
         ]
       }
     },
-    "/api/busy-blocks/{block_id}": {
+    "/api/v1/busy-blocks/{block_id}": {
       "delete": {
         "tags": [
           "Schedule"
         ],
         "summary": "Delete Busy Block",
-        "operationId": "delete_busy_block_api_busy_blocks__block_id__delete",
+        "operationId": "delete_busy_block_api_v1_busy_blocks__block_id__delete",
         "security": [
           {
             "HTTPBearer": []
@@ -882,13 +1065,13 @@
         }
       }
     },
-    "/api/schedule/plan": {
+    "/api/v1/schedule/plan": {
       "post": {
         "tags": [
           "Schedule"
         ],
         "summary": "Preview or commit a schedule (UC-02, UC-03)",
-        "operationId": "plan_schedule_api_schedule_plan_post",
+        "operationId": "plan_schedule_api_v1_schedule_plan_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -928,13 +1111,13 @@
         ]
       }
     },
-    "/api/schedule/replan": {
+    "/api/v1/schedule/replan": {
       "post": {
         "tags": [
           "Schedule"
         ],
         "summary": "Replan unchecked sessions; preserve check-ins (UC-06)",
-        "operationId": "plan_schedule_api_schedule_replan_post",
+        "operationId": "plan_schedule_api_v1_schedule_replan_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -974,13 +1157,13 @@
         ]
       }
     },
-    "/api/schedule": {
+    "/api/v1/schedule": {
       "get": {
         "tags": [
           "Schedule"
         ],
         "summary": "Calendar",
-        "operationId": "calendar_api_schedule_get",
+        "operationId": "calendar_api_v1_schedule_get",
         "security": [
           {
             "HTTPBearer": []
@@ -1032,7 +1215,7 @@
                   "items": {
                     "$ref": "#/components/schemas/EntryOut"
                   },
-                  "title": "Response Calendar Api Schedule Get"
+                  "title": "Response Calendar Api V1 Schedule Get"
                 }
               }
             }
@@ -1050,13 +1233,13 @@
         }
       }
     },
-    "/api/schedule/{entry_id}/check-in": {
+    "/api/v1/schedule/{entry_id}/check-in": {
       "post": {
         "tags": [
           "Schedule"
         ],
         "summary": "Check In",
-        "operationId": "check_in_api_schedule__entry_id__check_in_post",
+        "operationId": "check_in_api_v1_schedule__entry_id__check_in_post",
         "security": [
           {
             "HTTPBearer": []
@@ -1107,13 +1290,13 @@
         }
       }
     },
-    "/api/reports/weekly": {
+    "/api/v1/reports/weekly": {
       "get": {
         "tags": [
           "Schedule"
         ],
         "summary": "Weekly Report",
-        "operationId": "weekly_report_api_reports_weekly_get",
+        "operationId": "weekly_report_api_v1_reports_weekly_get",
         "security": [
           {
             "HTTPBearer": []
@@ -1162,14 +1345,14 @@
         }
       }
     },
-    "/api/notifications": {
+    "/api/v1/notifications": {
       "get": {
         "tags": [
           "Schedule",
           "Reminders"
         ],
         "summary": "Notifications",
-        "operationId": "notifications_api_notifications_get",
+        "operationId": "notifications_api_v1_notifications_get",
         "security": [
           {
             "HTTPBearer": []
@@ -1209,7 +1392,7 @@
                   "items": {
                     "$ref": "#/components/schemas/NotificationOut"
                   },
-                  "title": "Response Notifications Api Notifications Get"
+                  "title": "Response Notifications Api V1 Notifications Get"
                 }
               }
             }
@@ -1227,14 +1410,14 @@
         }
       }
     },
-    "/api/notifications/{notification_id}/read": {
+    "/api/v1/notifications/{notification_id}/read": {
       "post": {
         "tags": [
           "Schedule",
           "Reminders"
         ],
         "summary": "Read Notification",
-        "operationId": "read_notification_api_notifications__notification_id__read_post",
+        "operationId": "read_notification_api_v1_notifications__notification_id__read_post",
         "security": [
           {
             "HTTPBearer": []
@@ -1275,13 +1458,13 @@
         }
       }
     },
-    "/api/teams": {
+    "/api/v1/teams": {
       "get": {
         "tags": [
           "Team workspaces"
         ],
         "summary": "List Teams",
-        "operationId": "list_teams_api_teams_get",
+        "operationId": "list_teams_api_v1_teams_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -1292,7 +1475,7 @@
                     "$ref": "#/components/schemas/TeamOut"
                   },
                   "type": "array",
-                  "title": "Response List Teams Api Teams Get"
+                  "title": "Response List Teams Api V1 Teams Get"
                 }
               }
             }
@@ -1309,7 +1492,7 @@
           "Team workspaces"
         ],
         "summary": "Create Team",
-        "operationId": "create_team_api_teams_post",
+        "operationId": "create_team_api_v1_teams_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1349,13 +1532,13 @@
         ]
       }
     },
-    "/api/teams/{team_id}/members": {
+    "/api/v1/teams/{team_id}/members": {
       "get": {
         "tags": [
           "Team workspaces"
         ],
         "summary": "Members",
-        "operationId": "members_api_teams__team_id__members_get",
+        "operationId": "members_api_v1_teams__team_id__members_get",
         "security": [
           {
             "HTTPBearer": []
@@ -1382,7 +1565,7 @@
                   "items": {
                     "$ref": "#/components/schemas/MemberOut"
                   },
-                  "title": "Response Members Api Teams  Team Id  Members Get"
+                  "title": "Response Members Api V1 Teams  Team Id  Members Get"
                 }
               }
             }
@@ -1400,13 +1583,13 @@
         }
       }
     },
-    "/api/teams/{team_id}/invitations": {
+    "/api/v1/teams/{team_id}/invitations": {
       "post": {
         "tags": [
           "Team workspaces"
         ],
         "summary": "Invite",
-        "operationId": "invite_api_teams__team_id__invitations_post",
+        "operationId": "invite_api_v1_teams__team_id__invitations_post",
         "security": [
           {
             "HTTPBearer": []
@@ -1439,7 +1622,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/InvitationOut"
+                  "$ref": "#/components/schemas/InvitationCreated"
                 }
               }
             }
@@ -1457,13 +1640,13 @@
         }
       }
     },
-    "/api/invitations": {
+    "/api/v1/invitations": {
       "get": {
         "tags": [
           "Team workspaces"
         ],
         "summary": "Invitations",
-        "operationId": "invitations_api_invitations_get",
+        "operationId": "invitations_api_v1_invitations_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -1474,7 +1657,7 @@
                     "$ref": "#/components/schemas/InvitationOut"
                   },
                   "type": "array",
-                  "title": "Response Invitations Api Invitations Get"
+                  "title": "Response Invitations Api V1 Invitations Get"
                 }
               }
             }
@@ -1487,13 +1670,13 @@
         ]
       }
     },
-    "/api/invitations/{invitation_id}/accept": {
+    "/api/v1/invitations/{invitation_id}/accept": {
       "post": {
         "tags": [
           "Team workspaces"
         ],
         "summary": "Accept",
-        "operationId": "accept_api_invitations__invitation_id__accept_post",
+        "operationId": "accept_api_v1_invitations__invitation_id__accept_post",
         "security": [
           {
             "HTTPBearer": []
@@ -1510,6 +1693,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvitationAccept"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -1534,13 +1727,62 @@
         }
       }
     },
-    "/api/tasks/{task_id}/share": {
+    "/api/v1/teams/{team_id}/members/{member_id}": {
+      "delete": {
+        "tags": [
+          "Team workspaces"
+        ],
+        "summary": "Remove Member",
+        "operationId": "remove_member_api_v1_teams__team_id__members__member_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "team_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Team Id"
+            }
+          },
+          {
+            "name": "member_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Member Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tasks/{task_id}/share": {
       "post": {
         "tags": [
           "Team workspaces"
         ],
         "summary": "Share",
-        "operationId": "share_api_tasks__task_id__share_post",
+        "operationId": "share_api_v1_tasks__task_id__share_post",
         "security": [
           {
             "HTTPBearer": []
@@ -1591,13 +1833,13 @@
         }
       }
     },
-    "/api/teams/{team_id}/coordinate": {
+    "/api/v1/teams/{team_id}/coordinate": {
       "post": {
         "tags": [
           "Team workspaces"
         ],
         "summary": "Coordinate",
-        "operationId": "coordinate_api_teams__team_id__coordinate_post",
+        "operationId": "coordinate_api_v1_teams__team_id__coordinate_post",
         "security": [
           {
             "HTTPBearer": []
@@ -1634,7 +1876,7 @@
                   "items": {
                     "$ref": "#/components/schemas/CommonSlot"
                   },
-                  "title": "Response Coordinate Api Teams  Team Id  Coordinate Post"
+                  "title": "Response Coordinate Api V1 Teams  Team Id  Coordinate Post"
                 }
               }
             }
@@ -1652,13 +1894,13 @@
         }
       }
     },
-    "/api/ai/chat": {
+    "/api/v1/ai/chat": {
       "post": {
         "tags": [
           "AI companion"
         ],
         "summary": "Chat",
-        "operationId": "chat_api_ai_chat_post",
+        "operationId": "chat_api_v1_ai_chat_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1680,6 +1922,9 @@
               }
             }
           },
+          "429": {
+            "description": "Chat rate limit reached"
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -1698,13 +1943,13 @@
         ]
       }
     },
-    "/api/ai/messages": {
+    "/api/v1/ai/messages": {
       "get": {
         "tags": [
           "AI companion"
         ],
         "summary": "History",
-        "operationId": "history_api_ai_messages_get",
+        "operationId": "history_api_v1_ai_messages_get",
         "security": [
           {
             "HTTPBearer": []
@@ -1734,7 +1979,7 @@
                   "items": {
                     "$ref": "#/components/schemas/MessageOut"
                   },
-                  "title": "Response History Api Ai Messages Get"
+                  "title": "Response History Api V1 Ai Messages Get"
                 }
               }
             }
@@ -1756,7 +2001,7 @@
           "AI companion"
         ],
         "summary": "Clear History",
-        "operationId": "clear_history_api_ai_messages_delete",
+        "operationId": "clear_history_api_v1_ai_messages_delete",
         "security": [
           {
             "HTTPBearer": []
@@ -1769,13 +2014,13 @@
         }
       }
     },
-    "/health": {
+    "/api/v1/health": {
       "get": {
         "tags": [
           "Health"
         ],
         "summary": "Health",
-        "operationId": "health_health_get",
+        "operationId": "health_api_v1_health_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -1808,6 +2053,20 @@
           "windows"
         ],
         "title": "AvailabilityPut"
+      },
+      "Body_upload_source_api_v1_courses__course_id__sources_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_source_api_v1_courses__course_id__sources_post"
       },
       "BusyCreate": {
         "properties": {
@@ -2006,6 +2265,54 @@
         ],
         "title": "CoordinateRequest"
       },
+      "CourseCreate": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "university",
+              "k12"
+            ],
+            "title": "Level",
+            "default": "university"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "title"
+        ],
+        "title": "CourseCreate"
+      },
+      "CourseOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "level": {
+            "type": "string",
+            "title": "Level"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "level"
+        ],
+        "title": "CourseOut"
+      },
       "EntryOut": {
         "properties": {
           "id": {
@@ -2172,6 +2479,61 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "InvitationAccept": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Code"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code"
+        ],
+        "title": "InvitationAccept"
+      },
+      "InvitationCreated": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "team_id": {
+            "type": "string",
+            "title": "Team Id"
+          },
+          "team_name": {
+            "type": "string",
+            "title": "Team Name"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "accepted": {
+            "type": "boolean",
+            "title": "Accepted"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "Shown once. The owner sends it to the invitee, who must enter it to join; re-inviting the same email issues a new code."
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "team_id",
+          "team_name",
+          "email",
+          "accepted",
+          "code"
+        ],
+        "title": "InvitationCreated"
       },
       "InvitationOut": {
         "properties": {
@@ -2455,6 +2817,23 @@
               }
             ],
             "title": "Personality"
+          },
+          "companion_mode": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "off",
+                  "buddy",
+                  "mentor",
+                  "girlfriend"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Companion Mode"
           }
         },
         "additionalProperties": false,
@@ -2497,7 +2876,7 @@
           "password": {
             "type": "string",
             "maxLength": 128,
-            "minLength": 10,
+            "minLength": 8,
             "title": "Password"
           },
           "name": {
@@ -2505,6 +2884,19 @@
             "maxLength": 80,
             "minLength": 1,
             "title": "Name"
+          },
+          "birth_year": {
+            "type": "integer",
+            "title": "Birth Year"
+          },
+          "account_level": {
+            "type": "string",
+            "enum": [
+              "university",
+              "k12"
+            ],
+            "title": "Account Level",
+            "default": "university"
           },
           "timezone": {
             "type": "string",
@@ -2517,7 +2909,8 @@
         "required": [
           "email",
           "password",
-          "name"
+          "name",
+          "birth_year"
         ],
         "title": "Register"
       },
@@ -2595,6 +2988,34 @@
           "team_id"
         ],
         "title": "ShareTask"
+      },
+      "SourceOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "file_name": {
+            "type": "string",
+            "title": "File Name"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "file_name",
+          "page",
+          "text"
+        ],
+        "title": "SourceOut"
       },
       "TaskCreate": {
         "properties": {
@@ -2962,6 +3383,42 @@
         ],
         "title": "Unscheduled"
       },
+      "UploadOut": {
+        "properties": {
+          "file_name": {
+            "type": "string",
+            "title": "File Name"
+          },
+          "pages": {
+            "type": "integer",
+            "title": "Pages"
+          },
+          "status": {
+            "type": "string",
+            "const": "processed",
+            "title": "Status"
+          },
+          "warning": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "scanned_pdf"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Warning"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file_name",
+          "pages",
+          "status"
+        ],
+        "title": "UploadOut"
+      },
       "UserOut": {
         "properties": {
           "id": {
@@ -2988,6 +3445,39 @@
               "playful"
             ],
             "title": "Personality"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "account_level": {
+            "type": "string",
+            "enum": [
+              "university",
+              "k12"
+            ],
+            "title": "Account Level"
+          },
+          "birth_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Birth Year"
+          },
+          "companion_mode": {
+            "type": "string",
+            "enum": [
+              "off",
+              "buddy",
+              "mentor",
+              "girlfriend"
+            ],
+            "title": "Companion Mode"
           }
         },
         "type": "object",
@@ -2996,7 +3486,11 @@
           "email",
           "name",
           "timezone",
-          "personality"
+          "personality",
+          "role",
+          "account_level",
+          "birth_year",
+          "companion_mode"
         ],
         "title": "UserOut"
       },

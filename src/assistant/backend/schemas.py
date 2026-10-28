@@ -34,6 +34,8 @@ Email = Annotated[
     ),
 ]
 Personality = Literal["warm", "direct", "playful"]
+CompanionMode = Literal["off", "buddy", "mentor", "girlfriend"]
+AccountLevel = Literal["university", "k12"]
 
 
 class Input(BaseModel):
@@ -53,6 +55,7 @@ class ProfilePatch(Input):
     ) = None
     timezone: str | None = None
     personality: Personality | None = None
+    companion_mode: CompanionMode | None = None
 
     @field_validator("timezone")
     @classmethod
@@ -75,11 +78,28 @@ class ProfilePatch(Input):
 
 class Register(Input):
     email: Email
-    password: str = Field(min_length=10, max_length=128)
+    password: str = Field(min_length=8, max_length=128)
     name: Annotated[
         str, StringConstraints(strip_whitespace=True, min_length=1, max_length=80)
     ]
+    # Collected now for the 18+ companion gate (week 3) and K-12 accounts (week 4).
+    birth_year: int
+    account_level: AccountLevel = "university"
     timezone: str = "Asia/Ho_Chi_Minh"
+
+    @field_validator("password")
+    @classmethod
+    def strong_password(cls, value):
+        if not (any(c.isalpha() for c in value) and any(c.isdigit() for c in value)):
+            raise ValueError("Password needs at least one letter and one digit")
+        return value
+
+    @field_validator("birth_year")
+    @classmethod
+    def plausible_birth_year(cls, value):
+        if not 1900 <= value <= date.today().year:
+            raise ValueError("birth_year must be between 1900 and the current year")
+        return value
 
     @field_validator("timezone")
     @classmethod
@@ -98,6 +118,10 @@ class UserOut(Output):
     name: str
     timezone: str
     personality: Personality
+    role: str
+    account_level: AccountLevel
+    birth_year: int | None
+    companion_mode: CompanionMode
 
 
 class TokenOut(Output):
@@ -294,6 +318,17 @@ class InvitationOut(Output):
     accepted: bool
 
 
+class InvitationCreated(InvitationOut):
+    code: str = Field(
+        description="Shown once. The owner sends it to the invitee, who must enter "
+        "it to join; re-inviting the same email issues a new code."
+    )
+
+
+class InvitationAccept(Input):
+    code: str = Field(min_length=1, max_length=100)
+
+
 class CoordinateRequest(TimeRange):
     duration_minutes: int = Field(default=60, ge=1, le=240)
 
@@ -340,3 +375,28 @@ class ReportOut(Output):
     completed_minutes: int
     missed_sessions: int
     completion_percent: int
+
+
+class CourseCreate(Input):
+    title: Title
+    level: AccountLevel = "university"
+
+
+class CourseOut(Output):
+    id: str
+    title: str
+    level: str
+
+
+class SourceOut(Output):
+    id: str
+    file_name: str
+    page: int
+    text: str
+
+
+class UploadOut(Output):
+    file_name: str
+    pages: int
+    status: Literal["processed"]
+    warning: Literal["scanned_pdf"] | None = None

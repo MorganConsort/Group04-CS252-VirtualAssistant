@@ -1,4 +1,8 @@
-"""Portable SQLAlchemy schema. All timestamps are normalized to UTC."""
+"""Portable SQLAlchemy schema. All timestamps are normalized to UTC.
+
+Alembic (``alembic/versions``) and ``db/schema.sql`` own the DDL; these mappings
+must match them, which ``tests/test_schema_sync.py`` enforces.
+"""
 
 from datetime import datetime, timezone
 from uuid import uuid4
@@ -8,9 +12,11 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Index,
+    Integer,
     String,
     Text,
     UniqueConstraint,
+    func,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.types import TypeDecorator
@@ -46,13 +52,74 @@ class Entity:
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
 
 
-class User(Entity, Base):
+def _uuid():
+    return str(uuid4())
+
+
+class User(Base):
+    """The canonical ``users`` table from migration 0001, extended by 0002."""
+
     __tablename__ = "users"
-    email: Mapped[str] = mapped_column(String(254), unique=True)
-    name: Mapped[str] = mapped_column(String(80))
-    password_hash: Mapped[str] = mapped_column(String(256))
-    timezone: Mapped[str] = mapped_column(String(64), default="Asia/Ho_Chi_Minh")
-    personality: Mapped[str] = mapped_column(String(16), default="warm")
+    id: Mapped[str] = mapped_column(Text, primary_key=True, default=_uuid)
+    email: Mapped[str] = mapped_column(Text, unique=True)
+    password_hash: Mapped[str] = mapped_column(Text)
+    role: Mapped[str] = mapped_column(Text, default="student", server_default="student")
+    account_level: Mapped[str] = mapped_column(
+        Text, default="university", server_default="university"
+    )
+    birth_year: Mapped[int | None] = mapped_column(Integer)
+    companion_mode: Mapped[str] = mapped_column(
+        Text, default="buddy", server_default="buddy"
+    )
+    adult_verified: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    failed_login_attempts: Mapped[int] = mapped_column(
+        Integer, default=0, server_default="0"
+    )
+    # ISO-8601 UTC text, matching the TEXT column of migration 0001.
+    locked_until: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[str] = mapped_column(
+        Text, server_default=func.current_timestamp()
+    )
+    name: Mapped[str] = mapped_column(String(80), server_default="")
+    timezone: Mapped[str] = mapped_column(
+        String(64), default="Asia/Ho_Chi_Minh", server_default="Asia/Ho_Chi_Minh"
+    )
+    personality: Mapped[str] = mapped_column(
+        String(16), default="warm", server_default="warm"
+    )
+
+
+class Course(Base):
+    __tablename__ = "courses"
+    id: Mapped[str] = mapped_column(Text, primary_key=True, default=_uuid)
+    owner_id: Mapped[str] = mapped_column(
+        Text, ForeignKey("users.id", ondelete="CASCADE")
+    )
+    title: Mapped[str] = mapped_column(Text)
+    level: Mapped[str] = mapped_column(
+        Text, default="university", server_default="university"
+    )
+    language: Mapped[str] = mapped_column(Text, default="vi", server_default="vi")
+    created_at: Mapped[str] = mapped_column(
+        Text, server_default=func.current_timestamp()
+    )
+
+
+class Source(Base):
+    """One row per PDF page: the unit every citation points to."""
+
+    __tablename__ = "sources"
+    id: Mapped[str] = mapped_column(Text, primary_key=True, default=_uuid)
+    course_id: Mapped[str] = mapped_column(
+        Text, ForeignKey("courses.id", ondelete="CASCADE")
+    )
+    file_name: Mapped[str] = mapped_column(Text)
+    page: Mapped[int] = mapped_column(Integer)
+    text: Mapped[str] = mapped_column(Text)
+    __table_args__ = (
+        CheckConstraint("page >= 1", name="ck_sources_page"),
+        UniqueConstraint("course_id", "file_name", "page"),
+    )
 
 
 class AuthSession(Base):
@@ -96,6 +163,8 @@ class Invitation(Entity, Base):
         ForeignKey("teams.id", ondelete="CASCADE"), index=True
     )
     email: Mapped[str] = mapped_column(String(254))
+    # The invitee must present the code the owner sent them; email alone is unverified.
+    token_hash: Mapped[str] = mapped_column(String(64))
     accepted: Mapped[bool] = mapped_column(default=False)
     team: Mapped[Team] = relationship()
     __table_args__ = (UniqueConstraint("team_id", "email"),)
