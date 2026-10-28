@@ -298,7 +298,7 @@ export default function App() {
             </button>
           </div>
         </header>
-        <div className="page-heading">
+        <div className="page-heading" key={page}>
           <h1>{title}</h1>
           <p>{subtitle}</p>
         </div>
