@@ -1,7 +1,7 @@
 """Concept extraction from per-page slide text (issue #9, spec 10.1).
 
-Pages are read in overlapping windows, each window asks the LLM for 0-5 concepts, duplicates
-are merged, and a deck with too many candidates is consolidated to the core concepts.
+Pages are read in 20-page windows, up to four at once; each window asks the LLM for 0-5
+concepts, duplicates are merged, and a deck with too many candidates is consolidated.
 Slide text is data only, never instructions (spec 10.6).
 """
 from __future__ import annotations
@@ -10,6 +10,7 @@ import json
 import logging
 import re
 import unicodedata
+from concurrent.futures import ThreadPoolExecutor
 from difflib import SequenceMatcher
 from pathlib import Path
 from uuid import uuid4
@@ -23,16 +24,18 @@ log = logging.getLogger("app.concepts")
 PROMPTS = Path(__file__).parent / "prompts"
 EXTRACT_PROMPT = "extract_v3"
 CONSOLIDATE_PROMPT = "consolidate_v1"
-# 20 pages sliding by 18: the 2-page overlap keeps a concept split across windows whole, and
-# 20 pages is few enough that the model reads each one closely (8 calls for the 146-page
-# Week 1 deck). v1 used 3 by 2: 73 calls, and each saw too little text to judge a concept.
-WINDOW, STEP = 20, 18
+# 20 pages, no overlap: windows run in parallel, so each page is read exactly once and a
+# concept split across two windows is joined by merge(). 20 pages is few enough that the
+# model reads each one closely (8 calls for the 146-page Week 1 deck).
+WINDOW, STEP = 20, 20
+PARALLEL = 4  # windows in flight at once
 SIMILAR_TITLE = 0.9
 MAX_CONCEPTS = 20
 BLOOM_LEVELS = ("remember", "understand", "apply", "analyze", "evaluate", "create")
 # Backstop for the prompt rule; compared after normalize().
 DECORATIVE = {"q a", "content", "contents", "agenda", "outline", "questions", "thank you"}
-_BLOCK_TAG = re.compile(r"</?\s*(slide_text|known_concepts|candidates)\s*>", re.IGNORECASE)
+_BLOCK_TAG = re.compile(r"</?\s*(slide_text|known_concepts|previous_concepts|candidates)\s*>",
+                        re.IGNORECASE)
 
 EXTRACT_SCHEMA = {
     "type": "object",
@@ -138,31 +141,49 @@ def merge(concepts: list[dict], into: list[dict] | None = None) -> list[dict]:
     return merged
 
 
-def extract_concepts(llm: LLMClient, pages: list[str],
-                     visuals: list[str] | None = None) -> list[dict]:
+def extract_concepts(llm: LLMClient, pages: list[str], visuals: list[str] | None = None,
+                     previous: list[dict] | None = None) -> list[dict]:
     """Propose concepts for one deck; ``pages[0]`` is page 1.
 
     ``visuals`` holds the vision model's note per page (see visual.py), "" for none.
+    ``previous`` holds concepts proposed earlier for this deck: each window revises the
+    ones citing its pages instead of starting over.
+    Windows run PARALLEL at a time; a batch is told the concepts found by earlier batches.
     """
     system = _prompt(EXTRACT_PROMPT)
     visuals = visuals or [""] * len(pages)
+    previous = previous or []
     found: list[dict] = []
-    for numbers in windows(len(pages)):
-        if not any(pages[n - 1].strip() or visuals[n - 1] for n in numbers):
-            continue  # blank pages with nothing seen in them: nothing to read
-        known = "\n".join(f"- {c['slug']}: {c['title']}" for c in found) or "(none yet)"
+
+    def read_window(numbers: list[int], known: str) -> list[dict]:
         slides = "\n".join(
             f"[Page {n}] {pages[n - 1]}"
             + (f"\n[Page {n} visual] {visuals[n - 1]}" if visuals[n - 1] else "")
             for n in numbers)
+        earlier = "\n".join(f"{c['slug']} | {c['title']} | {c['summary']} | pages "
+                            f"{c['source_pages']}" for c in previous
+                            if set(c["source_pages"]) & set(numbers))
         prompt = (f"<known_concepts>\n{_data(known)}\n</known_concepts>\n"
-                  f"<slide_text>\n{_data(slides)}\n</slide_text>")
+                  + (f"<previous_concepts>\n{_data(earlier)}\n</previous_concepts>\n"
+                     if earlier else "")
+                  + f"<slide_text>\n{_data(slides)}\n</slide_text>")
         try:
             answer = llm.complete(prompt, system=system, json_schema=EXTRACT_SCHEMA,
                                   max_tokens=8192, temperature=0.2).text  # thinking counts
-            found = merge(parse_concepts(answer, set(numbers)), found)
+            return parse_concepts(answer, set(numbers))
         except (ValueError, RetryableError) as exc:  # bad JSON, or quota/network after retries
             log.warning("concepts: skipped pages %d-%d: %s", numbers[0], numbers[-1], exc)
+            return []
+
+    readable = [numbers for numbers in windows(len(pages))
+                if any(pages[n - 1].strip() or visuals[n - 1] for n in numbers)]
+    with ThreadPoolExecutor(max_workers=PARALLEL) as pool:
+        for start in range(0, len(readable), PARALLEL):
+            known = "\n".join(f"- {c['slug']}: {c['title']}"
+                              for c in merge(found, previous)) or "(none yet)"
+            batch = readable[start:start + PARALLEL]
+            for concepts in pool.map(read_window, batch, [known] * len(batch)):
+                found = merge(concepts, found)  # in page order, so merging is deterministic
     if len(found) > MAX_CONCEPTS:
         found = consolidate(llm, found)
     return sorted(found, key=lambda c: c["source_pages"][0])
@@ -196,23 +217,32 @@ def consolidate(llm: LLMClient, candidates: list[dict]) -> list[dict]:
 
 
 def save_concepts(db, course_id: str, concepts: list[dict]) -> list[dict]:
-    """Store proposals as unconfirmed; an existing concept of the course only gains pages.
+    """Store proposals as unconfirmed; an existing concept gains pages, and when a proposal
+    revises it (same slug) while still unconfirmed, also its title, summary and bloom level.
+    A confirmed concept keeps the user's wording.
 
     ``db`` is a SQLAlchemy Session or Connection; the caller commits.
     shortcut: source_pages has no file name, so two decks of one course share page numbers;
     add a source_file column when a course holds more than one deck.
     """
     rows = db.execute(text(
-        "SELECT id, slug, title, summary, bloom_level, source_pages FROM concepts "
+        "SELECT id, slug, title, summary, bloom_level, source_pages, confirmed FROM concepts "
         "WHERE course_id = :course_id"), {"course_id": course_id}).mappings()
     stored = [{**row, "source_pages": json.loads(row["source_pages"] or "[]")} for row in rows]
+    revised = {c["slug"]: c for c in concepts}
     result = merge(concepts, stored)
     for concept in result:
+        if "id" in concept and not concept["confirmed"] and concept["slug"] in revised:
+            new = revised[concept["slug"]]
+            concept.update(title=new["title"], summary=new["summary"],
+                           bloom_level=new["bloom_level"])
         params = {**concept, "course_id": course_id,
                   "source_pages": json.dumps(concept["source_pages"])}
         if "id" in concept:
-            db.execute(text("UPDATE concepts SET source_pages = :source_pages WHERE id = :id"),
-                       params)
+            db.execute(text(
+                "UPDATE concepts SET title = :title, summary = :summary, "
+                "bloom_level = :bloom_level, source_pages = :source_pages WHERE id = :id"),
+                params)
         else:
             concept["id"] = params["id"] = str(uuid4())
             db.execute(text(

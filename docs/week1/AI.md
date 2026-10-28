@@ -13,7 +13,8 @@ Dưới đây là các hạng mục công việc cần hoàn thiện:
   - **Cấu hình**: `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL` trong `.env`; có `.env.example`.
   - **Chi phí**: log token và USD mỗi lần gọi, không log nội dung.
 - [ ] **Task 2: Trích xuất concept (#9, Minh, 10 giờ)**
-  - **Hai model, 20 trang mỗi lần gọi**: lúc upload, `gemini-3.1-flash-lite` đọc PDF như ảnh (`visual.py`, prompt `visual_v1`) và ghi chú sơ đồ, biểu đồ, bảng dạng ảnh, trang scan vào `sources.visual_notes` (không dùng để trích dẫn); lỗi thì upload vẫn thành công, chỉ thiếu ghi chú. Lúc propose, `gemini-3.5-flash-lite` (lỗi thì `gemini-3.1-flash-lite`) đọc text + ghi chú theo cửa sổ 20 trang bước 18 (prompt `extract_v3`) và viết concept. Deck 146 trang: 8 lần gọi đọc ảnh + 8 lần gọi concept. Đổi model qua `LLM_VISION_MODEL`, `LLM_MODEL`.
+  - **Hai model, 20 trang mỗi lần gọi, tối đa 4 lần gọi song song**: lúc upload, `gemini-3.1-flash-lite` (thinking `MINIMAL`) đọc PDF như ảnh theo khối 20 trang không chồng nhau (`visual.py`, prompt `visual_v1`) và chép lại sơ đồ, biểu đồ, bảng dạng ảnh, trang scan thành gạch đầu dòng dễ đọc vào `sources.visual_notes` (không dùng để trích dẫn); lỗi thì upload vẫn thành công. Lúc propose, `gemini-3.5-flash-lite` (thinking mặc định; lỗi thì `gemini-3.1-flash-lite`) đọc text + ghi chú theo cửa sổ 20 trang không chồng nhau (prompt `extract_v3`), chạy theo lô 4 cửa sổ; lô sau được biết concept của lô trước để giữ slug. Model đầu danh sách lỗi (503, quá 90 giây) thì chuyển ngay sang model sau; chỉ model cuối mới retry.
+  - **Chạy lại = sửa lại**: upload lại cùng file thì model đọc ảnh sửa ghi chú cũ (lỗi thì giữ ghi chú cũ); propose lại thì model concept sửa concept cũ của các trang đó (giữ slug). Concept chưa xác nhận được cập nhật title/summary/bloom; concept đã xác nhận giữ nguyên chữ của người dùng, chỉ thêm trang.
   - **Lịch sử**: v1 dùng 3 trang bước 2 (73 lần gọi cho Week 1); v2 dùng 40 trang bước 36 (4 lần gọi) nhưng concept thô hơn.
   - **Output**: `slug, title, summary, bloom_level, source_pages`.
   - **Gộp trùng**: slug trùng, hoặc tên chuẩn hóa giống ≥ 0,9.
@@ -87,6 +88,7 @@ tests/test_llm.py, test_concepts.py, test_retrieval.py, test_items.py
 
 Chạy ngày 28/10/2026 bằng `gemini-3.5-flash-lite` (quota ngày của `gemini-3.8-flash` đã hết), `python dev.py ai concepts <file>`. Cột "Concept hợp lý" do team chấm.
 ¹ Cửa sổ trang 37–76 bị Gemini trả 503 nên bị bỏ qua; chạy lại sẽ có thêm concept. ² Chạy trước khi prompt v2 thêm quy tắc "không gộp nhiều ý thành một chủ đề lớn" (Week03 tăng từ 6 lên 10 concept sau quy tắc này). ³ Chạy với hai model, cửa sổ 20 trang (`extract_v3`); bản `extract_v2` ra 8. Gemini 3.1 trả 503 cho trang 41–80 nên các trang đó không có ghi chú ảnh; cả lần chạy mất ~6 phút vì retry.
+Thời gian Week02: chạy tuần tự 6 phút 12 giây → song song (4 luồng, chuyển model ngay khi 503, timeout 90 giây) 1 phút 54 giây, dù lúc đo Gemini quá tải: cả 4 khối ảnh và 2/4 cửa sổ concept bị 503.
 
 **Item generation (#10), kiểm tra tay 20 item**
 

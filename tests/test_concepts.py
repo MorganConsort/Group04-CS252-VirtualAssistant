@@ -2,6 +2,8 @@
 
 import json
 import logging
+import threading
+import time
 from io import BytesIO
 from itertools import pairwise
 
@@ -12,6 +14,7 @@ from sqlalchemy import text
 
 from app.concepts.extract import (
     MAX_CONCEPTS,
+    PARALLEL,
     STEP,
     WINDOW,
     extract_concepts,
@@ -154,11 +157,11 @@ def test_rate_limited_window_is_skipped_instead_of_losing_the_deck(caplog):
 
 def test_same_slug_in_two_windows_is_one_concept():
     llm = FakeLLM({
-        "[Page 1]": answer(concept("solution-ladder", [SECOND])),
+        "[Page 1]": answer(concept("solution-ladder", [WINDOW])),
         f"[Page {WINDOW + 1}]": answer(concept("solution-ladder", [WINDOW + 1])),
     })
     assert [(c["slug"], c["source_pages"]) for c in extract_concepts(llm, TWO_WINDOWS)] == [
-        ("solution-ladder", [SECOND, WINDOW + 1])]
+        ("solution-ladder", [WINDOW, WINDOW + 1])]
 
 
 def test_slide_text_is_fenced_and_cannot_close_its_block():
@@ -246,6 +249,7 @@ class Vision(FakeLLM):
     def complete(self, prompt, **kwargs):
         self.calls += 1
         self.pdfs.append(kwargs["pdf"])
+        self.last_prompt = prompt
         return LLMResult(json.dumps({"pages": [{"page": 1, "notes": "Flowchart: A -> B"},
                                                {"page": 999, "notes": "out of range"}]}), 0, 0, 0)
 
@@ -255,7 +259,8 @@ def test_visual_pass_reads_20_pages_per_call_and_maps_page_numbers():
     llm = Vision()
     notes = read_visuals(llm, pdf, PAGES_PER_CALL + 5)
     assert llm.calls == 2
-    assert [len(PdfReader(BytesIO(chunk)).pages) for chunk in llm.pdfs] == [PAGES_PER_CALL, 5]
+    assert sorted(len(PdfReader(BytesIO(chunk)).pages) for chunk in llm.pdfs) == [
+        5, PAGES_PER_CALL]
     assert [n for n, note in enumerate(notes, start=1) if note] == [1, PAGES_PER_CALL + 1]
 
 
@@ -280,3 +285,57 @@ def test_upload_stores_visual_notes_and_propose_reads_them(app, client, headers,
     llm = FakeLLM({"[Page 1 visual] Flowchart: A -> B": answer(concept("framing-ladder", [1]))})
     response = propose(app, client, headers, course, llm)
     assert [c["slug"] for c in response.json()["concepts"]] == ["framing-ladder"]
+
+
+def test_windows_run_at_most_four_at_once_and_later_batches_know_earlier_concepts():
+    class Busy(FakeLLM):
+        def __init__(self, responses):
+            super().__init__(responses)
+            self.active = self.peak = 0
+            self.prompts = []
+            self.lock = threading.Lock()
+
+        def complete(self, prompt, **kwargs):
+            with self.lock:
+                self.active += 1
+                self.peak = max(self.peak, self.active)
+                self.prompts.append(prompt)
+            time.sleep(0.05)
+            with self.lock:
+                self.active -= 1
+            return super().complete(prompt, **kwargs)
+
+    llm = Busy({"[Page 1]": answer(concept("solution-ladder", [1]))})
+    extract_concepts(llm, ["slide text"] * (WINDOW * (PARALLEL + 1)))
+    assert llm.calls == PARALLEL + 1 and llm.peak == PARALLEL
+    last = next(p for p in llm.prompts if f"[Page {WINDOW * PARALLEL + 1}]" in p)
+    assert "- solution-ladder: " in last
+
+
+def test_a_rerun_revises_previous_concepts_of_its_window_only():
+    previous = [concept("solution-ladder", [1]), concept("framing-ladder", [WINDOW + 1])]
+    llm = FakeLLM({"<previous_concepts>\nsolution-ladder | ": answer(
+        concept("solution-ladder", [1, 2], summary="Bản sửa."))})
+    concepts = extract_concepts(llm, TWO_WINDOWS, previous=previous)
+    assert [(c["slug"], c["summary"]) for c in concepts] == [("solution-ladder", "Bản sửa.")]
+
+
+def test_revision_rewrites_unconfirmed_concepts_but_keeps_confirmed_wording(app, course):
+    with app.state.database.sessions() as db:
+        save_concepts(db, course, [concept("solution-ladder", [1]), concept("framing-ladder", [2])])
+        db.execute(text("UPDATE concepts SET confirmed = 1 WHERE slug = 'framing-ladder'"))
+        save_concepts(db, course, [concept("solution-ladder", [1], summary="Bản sửa."),
+                                   concept("framing-ladder", [3], summary="Bản sửa.")])
+        db.commit()
+        rows = db.execute(text("SELECT slug, summary, source_pages FROM concepts "
+                               "WHERE course_id = :c ORDER BY slug"), {"c": course}).all()
+    assert rows == [("framing-ladder", "Một ý chính.", "[2, 3]"),
+                    ("solution-ladder", "Bản sửa.", "[1]")]
+
+
+def test_reupload_revises_kept_visual_notes_and_failure_keeps_them():
+    llm = Vision()
+    read_visuals(llm, make_pdf("a", "b"), 2, previous=["- old note", ""])
+    assert llm.last_prompt.endswith("<previous_notes>\n[Page 1]\n- old note\n</previous_notes>")
+    assert read_visuals(FakeLLM({"": "not json"}), make_pdf("a", "b"), 2,
+                        previous=["- old note", ""]) == ["- old note", ""]

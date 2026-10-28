@@ -75,7 +75,13 @@ def upload_source(
         pages = extract_pages(data)
     except InvalidPdf:
         raise HTTPException(400, "invalid_pdf") from None
-    notes = read_visuals(vision, data, len(pages))  # "" per page if the vision model fails
+    # A re-upload revises the notes kept from last time; a failed chunk keeps them.
+    previous = [""] * len(pages)
+    for number, note in db.execute(select(Source.page, Source.visual_notes).where(
+            Source.course_id == course_id, Source.file_name == name)):
+        if number <= len(pages):
+            previous[number - 1] = note or ""
+    notes = read_visuals(vision, data, len(pages), previous)
     # Re-uploading the same file name replaces its pages.
     db.execute(
         delete(Source).where(Source.course_id == course_id, Source.file_name == name)
@@ -119,8 +125,13 @@ def propose_concepts(
         notes.append(note or "")
     if not decks:
         raise HTTPException(404, "no_sources")
+    # A re-run revises what was proposed before rather than starting over.
+    previous = [{**row, "source_pages": json.loads(row["source_pages"] or "[]")}
+                for row in db.execute(text(
+                    "SELECT slug, title, summary, source_pages FROM concepts "
+                    "WHERE course_id = :course_id"), {"course_id": course_id}).mappings()]
     for pages, notes in decks.values():
-        concepts = extract_concepts(llm, pages, notes)
+        concepts = extract_concepts(llm, pages, notes, previous)
         # shortcut: a deck with text but no concepts means every LLM call failed (quota,
         # network, bad JSON); report it rather than look like an empty deck.
         if not concepts and (any(pages) or any(notes)):

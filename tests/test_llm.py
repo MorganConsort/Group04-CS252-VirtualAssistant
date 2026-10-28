@@ -113,12 +113,12 @@ def test_gemini_falls_back_and_skips_a_model_out_of_daily_quota(monkeypatch):
     assert client.called == ["first", "second", "second"]
 
 
-def test_gemini_tries_the_next_model_after_retries_but_raises_on_the_last(monkeypatch):
+def test_gemini_hands_over_at_once_but_retries_the_last_model(monkeypatch):
     overloaded = RetryableError("503")
-    client = _gemini(monkeypatch, *[overloaded] * 6, models=("first", "second"))
+    client = _gemini(monkeypatch, *[overloaded] * 4, models=("first", "second"))
     with pytest.raises(RetryableError):
         client.complete("p")
-    assert client.called == ["first"] * 3 + ["second"] * 3
+    assert client.called == ["first"] + ["second"] * 3
 
 
 def test_vision_and_text_roles_use_their_own_models(monkeypatch):
@@ -126,5 +126,6 @@ def test_vision_and_text_roles_use_their_own_models(monkeypatch):
     monkeypatch.setenv("LLM_API_KEY", "test-key")
     monkeypatch.delenv("LLM_MODEL", raising=False)
     monkeypatch.delenv("LLM_VISION_MODEL", raising=False)
-    assert get_vision_client().models == ["gemini-3.1-flash-lite"]
-    assert get_client().models == ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite"]
+    vision, text = get_vision_client(), get_client()
+    assert (vision.models, vision.thinking) == (["gemini-3.1-flash-lite"], "MINIMAL")
+    assert (text.models, text.thinking) == (["gemini-3.5-flash-lite", "gemini-3.1-flash-lite"], None)

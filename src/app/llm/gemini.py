@@ -3,13 +3,14 @@ from __future__ import annotations
 
 import json
 import logging
+import threading
 import time
 
 from app.llm.base import LLMClient, LLMResult, RetryableError
 
 log = logging.getLogger("app.llm")
 
-TIMEOUT_MS = 180_000  # a whole deck in one call (vision or concepts) can take over a minute
+TIMEOUT_MS = 90_000  # a slower call counts as a failure, so the next model gets a turn
 RETRY_DELAYS = (1, 3)  # seconds before retry 1 and retry 2
 MAX_WAIT = 60  # a longer server-requested wait is a daily quota: retrying now cannot succeed
 # USD per 1M tokens (input, output).
@@ -32,25 +33,32 @@ def _retry_after(error) -> float | None:
 
 
 class GeminiClient(LLMClient):
-    def __init__(self, api_key: str, models: list[str]):
+    def __init__(self, api_key: str, models: list[str], thinking: str | None = None):
         self.api_key = api_key
         self.models = list(models)  # in priority order; the next one is used when one fails
+        self.thinking = thinking  # e.g. "MINIMAL" for plain extraction; None = model default
         self._client = None  # created on first call so tests never need the SDK
+        self._lock = threading.Lock()  # callers may share one client across threads
 
     def complete(self, prompt: str, *, system: str = "", json_schema: dict | None = None,
                  max_tokens: int = 1024, temperature: float = 0.2,
                  pdf: bytes | None = None) -> LLMResult:
         start = time.monotonic()
-        for model in list(self.models):
+        models = list(self.models)
+        for model in models:
+            last = model == models[-1]
             try:
+                # Only the last model retries: any other hands over at once (overload, timeout).
                 text, input_tokens, output_tokens = self._with_retries(
-                    model, prompt, system, json_schema, max_tokens, temperature, pdf)
+                    model, last, prompt, system, json_schema, max_tokens, temperature, pdf)
                 break
             except RetryableError as e:
-                if model == self.models[-1]:
+                if last:
                     raise
                 if (e.retry_after or 0) > MAX_WAIT:  # daily quota: skip it for this client's life
-                    self.models.remove(model)
+                    with self._lock:
+                        if model in self.models and len(self.models) > 1:
+                            self.models.remove(model)
                 log.warning("provider=gemini model=%s unavailable (%s), trying the next model",
                             model, e)
         if json_schema is not None:
@@ -68,8 +76,8 @@ class GeminiClient(LLMClient):
                  (time.monotonic() - start) * 1000)
         return result
 
-    def _with_retries(self, model: str, *args) -> tuple[str, int, int]:
-        for delay in (*RETRY_DELAYS, None):
+    def _with_retries(self, model: str, retry: bool, *args) -> tuple[str, int, int]:
+        for delay in ((*RETRY_DELAYS, None) if retry else (None,)):
             try:
                 return self._generate(model, *args)
             except RetryableError as e:
@@ -88,18 +96,21 @@ class GeminiClient(LLMClient):
         from google import genai
         from google.genai import errors, types
 
-        if self._client is None:
-            # OS trust store, not certifi: antivirus/proxy TLS inspection on Windows otherwise
-            # fails every call with CERTIFICATE_VERIFY_FAILED.
-            verify = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-            self._client = genai.Client(api_key=self.api_key, http_options=types.HttpOptions(
-                timeout=TIMEOUT_MS, client_args={"verify": verify}))
+        with self._lock:
+            if self._client is None:
+                # OS trust store, not certifi: antivirus/proxy TLS inspection on Windows
+                # otherwise fails every call with CERTIFICATE_VERIFY_FAILED.
+                verify = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+                self._client = genai.Client(api_key=self.api_key, http_options=types.HttpOptions(
+                    timeout=TIMEOUT_MS, client_args={"verify": verify}))
         config = types.GenerateContentConfig(
             system_instruction=system or None,
             max_output_tokens=max_tokens,
             temperature=temperature,
             response_mime_type="application/json" if json_schema is not None else None,
             response_json_schema=json_schema,
+            thinking_config=(types.ThinkingConfig(thinking_level=self.thinking)
+                             if self.thinking else None),
         )
         contents = ([types.Part.from_bytes(data=pdf, mime_type="application/pdf"), prompt]
                     if pdf is not None else prompt)

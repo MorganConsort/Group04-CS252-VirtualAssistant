@@ -21,10 +21,12 @@ def get_client() -> LLMClient:
 
 def get_vision_client() -> LLMClient:
     """Reads PDF pages visually (diagrams, tables, scans): LLM_VISION_MODEL, a comma list."""
-    return _client("LLM_VISION_MODEL", DEFAULT_VISION_MODELS)
+    # Minimal thinking: it transcribes what it sees; reasoning is the concept model's job.
+    return _client("LLM_VISION_MODEL", DEFAULT_VISION_MODELS, thinking="MINIMAL")
 
 
-def _client(model_variable: str, default_models: tuple[str, ...]) -> LLMClient:
+def _client(model_variable: str, default_models: tuple[str, ...],
+            thinking: str | None = None) -> LLMClient:
     provider = os.environ.get("LLM_PROVIDER", "fake").strip().lower() or "fake"
     if provider == "fake":
         return FakeLLM()
@@ -35,5 +37,5 @@ def _client(model_variable: str, default_models: tuple[str, ...]) -> LLMClient:
         from app.llm.gemini import GeminiClient
 
         models = [m.strip() for m in os.environ.get(model_variable, "").split(",") if m.strip()]
-        return GeminiClient(api_key, models or list(default_models))
+        return GeminiClient(api_key, models or list(default_models), thinking)
     raise ValueError(f"LLM_PROVIDER không hỗ trợ: '{provider}'. Dùng: fake, gemini.")
