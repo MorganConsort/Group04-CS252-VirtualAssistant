@@ -9,7 +9,7 @@ from app.llm.base import LLMClient, LLMResult, RetryableError
 
 log = logging.getLogger("app.llm")
 
-TIMEOUT_MS = 30_000
+TIMEOUT_MS = 180_000  # a whole deck in one call (vision or concepts) can take over a minute
 RETRY_DELAYS = (1, 3)  # seconds before retry 1 and retry 2
 MAX_WAIT = 60  # a longer server-requested wait is a daily quota: retrying now cannot succeed
 # USD per 1M tokens (input, output).
@@ -38,12 +38,13 @@ class GeminiClient(LLMClient):
         self._client = None  # created on first call so tests never need the SDK
 
     def complete(self, prompt: str, *, system: str = "", json_schema: dict | None = None,
-                 max_tokens: int = 1024, temperature: float = 0.2) -> LLMResult:
+                 max_tokens: int = 1024, temperature: float = 0.2,
+                 pdf: bytes | None = None) -> LLMResult:
         start = time.monotonic()
         for model in list(self.models):
             try:
                 text, input_tokens, output_tokens = self._with_retries(
-                    model, prompt, system, json_schema, max_tokens, temperature)
+                    model, prompt, system, json_schema, max_tokens, temperature, pdf)
                 break
             except RetryableError as e:
                 if model == self.models[-1]:
@@ -79,7 +80,7 @@ class GeminiClient(LLMClient):
         raise AssertionError("unreachable")  # the last attempt returns or raises
 
     def _generate(self, model: str, prompt: str, system: str, json_schema: dict | None,
-                  max_tokens: int, temperature: float) -> tuple[str, int, int]:
+                  max_tokens: int, temperature: float, pdf: bytes | None) -> tuple[str, int, int]:
         import ssl
 
         import httpx
@@ -100,8 +101,10 @@ class GeminiClient(LLMClient):
             response_mime_type="application/json" if json_schema is not None else None,
             response_json_schema=json_schema,
         )
+        contents = ([types.Part.from_bytes(data=pdf, mime_type="application/pdf"), prompt]
+                    if pdf is not None else prompt)
         try:
-            resp = self._client.models.generate_content(model=model, contents=prompt, config=config)
+            resp = self._client.models.generate_content(model=model, contents=contents, config=config)
         except errors.APIError as e:
             if e.code == 429 or e.code >= 500:
                 raise RetryableError(f"Gemini HTTP {e.code}", _retry_after(e)) from e

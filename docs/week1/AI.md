@@ -13,7 +13,8 @@ Dưới đây là các hạng mục công việc cần hoàn thiện:
   - **Cấu hình**: `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL` trong `.env`; có `.env.example`.
   - **Chi phí**: log token và USD mỗi lần gọi, không log nội dung.
 - [ ] **Task 2: Trích xuất concept (#9, Minh, 10 giờ)**
-  - **Cửa sổ trang**: 40 trang, bước 36 (prompt `extract_v2`). Bản đầu dùng 3 trang bước 2 (`extract_v1`): deck Week 1 146 trang tốn 73 lần gọi, 4 deck ~200 lần, vượt quota Gemini free tier (20 lần/ngày) và mỗi lần gọi thấy quá ít text. Nay 4 deck chỉ còn 13 lần gọi.
+  - **Hai model, 20 trang mỗi lần gọi**: lúc upload, `gemini-3.1-flash-lite` đọc PDF như ảnh (`visual.py`, prompt `visual_v1`) và ghi chú sơ đồ, biểu đồ, bảng dạng ảnh, trang scan vào `sources.visual_notes` (không dùng để trích dẫn); lỗi thì upload vẫn thành công, chỉ thiếu ghi chú. Lúc propose, `gemini-3.5-flash-lite` (lỗi thì `gemini-3.1-flash-lite`) đọc text + ghi chú theo cửa sổ 20 trang bước 18 (prompt `extract_v3`) và viết concept. Deck 146 trang: 8 lần gọi đọc ảnh + 8 lần gọi concept. Đổi model qua `LLM_VISION_MODEL`, `LLM_MODEL`.
+  - **Lịch sử**: v1 dùng 3 trang bước 2 (73 lần gọi cho Week 1); v2 dùng 40 trang bước 36 (4 lần gọi) nhưng concept thô hơn.
   - **Output**: `slug, title, summary, bloom_level, source_pages`.
   - **Gộp trùng**: slug trùng, hoặc tên chuẩn hóa giống ≥ 0,9.
   - **API**: `POST /api/v1/courses/{course_id}/concepts:propose?file_name=<file>` đọc các trang đã upload, trích concept và lưu `confirmed = 0`; LLM lỗi hết thì trả `503 concepts_unavailable`, chưa upload thì `404 no_sources`.
@@ -33,7 +34,7 @@ Dưới đây là các hạng mục công việc cần hoàn thiện:
 
 ```text
 src/app/llm/            # #8: base.py, fake.py, <vendor>.py, __init__.py (get_client)
-src/app/concepts/       # #9: extract.py, prompts/extract_v2.txt (v1 giữ để so sánh)
+src/app/concepts/       # #9: extract.py, visual.py, prompts/extract_v3.txt, visual_v1.txt (v1, v2 giữ để so sánh)
 src/app/retrieval/      # #11: bm25.py
 src/app/items/          # #10: generate.py, prompts/generate_v1.txt
 eval/run_retrieval.py   # #11: đo top-5 hit rate
@@ -81,11 +82,11 @@ tests/test_llm.py, test_concepts.py, test_retrieval.py, test_items.py
 |---|---:|---:|---:|---:|
 | Week 0 - Orientation | 94 | 7 ¹ | | |
 | Week01 Problem Framing | 146 | 16 ² | | |
-| Week02 Decomposition & Use Cases | 80 | 8 ² | | |
+| Week02 Decomposition & Use Cases | 80 | 14 ³ | | |
 | Week03 Pitfalls & Pipelines | 83 | 10 | | |
 
 Chạy ngày 28/10/2026 bằng `gemini-3.5-flash-lite` (quota ngày của `gemini-3.8-flash` đã hết), `python dev.py ai concepts <file>`. Cột "Concept hợp lý" do team chấm.
-¹ Cửa sổ trang 37–76 bị Gemini trả 503 nên bị bỏ qua; chạy lại sẽ có thêm concept. ² Chạy trước khi prompt v2 thêm quy tắc "không gộp nhiều ý thành một chủ đề lớn" (Week03 tăng từ 6 lên 10 concept sau quy tắc này).
+¹ Cửa sổ trang 37–76 bị Gemini trả 503 nên bị bỏ qua; chạy lại sẽ có thêm concept. ² Chạy trước khi prompt v2 thêm quy tắc "không gộp nhiều ý thành một chủ đề lớn" (Week03 tăng từ 6 lên 10 concept sau quy tắc này). ³ Chạy với hai model, cửa sổ 20 trang (`extract_v3`); bản `extract_v2` ra 8. Gemini 3.1 trả 503 cho trang 41–80 nên các trang đó không có ghi chú ảnh; cả lần chạy mất ~6 phút vì retry.
 
 **Item generation (#10), kiểm tra tay 20 item**
 
@@ -101,7 +102,7 @@ Chạy ngày 28/10/2026 bằng `gemini-3.5-flash-lite` (quota ngày của `gemin
 |---|---|---|
 | 1 | BM25 chưa tách từ ghép tiếng Việt | Thêm tách từ (underthesea) hoặc vector search ở tuần 2 |
 | 2 | Gộp concept bằng so khớp chuỗi | Embeddings ở tuần 2 |
-| 3 | Gemini free tier chỉ 20 request/ngày; hết quota thì cửa sổ đó bị bỏ qua (log cảnh báo), không trả lỗi | Dùng key trả phí hoặc model có quota lớn hơn khi chạy nhiều deck |
+| 3 | Gemini free tier chỉ 20 request/ngày mỗi model; deck 146 trang tốn 8 lần gọi mỗi model, nên mỗi ngày chỉ xử lý được ~2 deck. Hết quota thì cửa sổ đó bị bỏ qua (log cảnh báo) | Dùng key trả phí hoặc model có quota lớn hơn khi chạy nhiều deck |
 
 ## 📚 Reference
 - **FSRS và spaced repetition**: nền cho scheduler tuần 2; đọc trước để thiết kế item phù hợp ôn tập.

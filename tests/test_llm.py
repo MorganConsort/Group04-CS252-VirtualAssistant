@@ -2,7 +2,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from app.llm import FakeLLM, get_client
+from app.llm import FakeLLM, get_client, get_vision_client
 from app.llm.gemini import GeminiClient, RetryableError, _retry_after
 
 
@@ -119,3 +119,12 @@ def test_gemini_tries_the_next_model_after_retries_but_raises_on_the_last(monkey
     with pytest.raises(RetryableError):
         client.complete("p")
     assert client.called == ["first"] * 3 + ["second"] * 3
+
+
+def test_vision_and_text_roles_use_their_own_models(monkeypatch):
+    monkeypatch.setenv("LLM_PROVIDER", "gemini")
+    monkeypatch.setenv("LLM_API_KEY", "test-key")
+    monkeypatch.delenv("LLM_MODEL", raising=False)
+    monkeypatch.delenv("LLM_VISION_MODEL", raising=False)
+    assert get_vision_client().models == ["gemini-3.1-flash-lite"]
+    assert get_client().models == ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite"]

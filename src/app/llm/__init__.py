@@ -7,12 +7,24 @@ from app.llm.base import LLMClient, LLMResult, RetryableError
 from app.llm.fake import FakeLLM
 
 # Tried in order: the next model is used when one is over quota or unavailable.
-DEFAULT_GEMINI_MODELS = ("gemini-3.5-flash-lite", "gemini-3.1-flash-lite")
+DEFAULT_GEMINI_MODELS = ("gemini-3.5-flash-lite", "gemini-3.1-flash-lite")  # organise concepts
+DEFAULT_VISION_MODELS = ("gemini-3.1-flash-lite",)  # read PDF pages as images
 
-__all__ = ["FakeLLM", "LLMClient", "LLMResult", "RetryableError", "get_client"]
+__all__ = ["FakeLLM", "LLMClient", "LLMResult", "RetryableError", "get_client",
+           "get_vision_client"]
 
 
 def get_client() -> LLMClient:
+    """Text work (concept organisation and output): LLM_MODEL, a comma list tried in order."""
+    return _client("LLM_MODEL", DEFAULT_GEMINI_MODELS)
+
+
+def get_vision_client() -> LLMClient:
+    """Reads PDF pages visually (diagrams, tables, scans): LLM_VISION_MODEL, a comma list."""
+    return _client("LLM_VISION_MODEL", DEFAULT_VISION_MODELS)
+
+
+def _client(model_variable: str, default_models: tuple[str, ...]) -> LLMClient:
     provider = os.environ.get("LLM_PROVIDER", "fake").strip().lower() or "fake"
     if provider == "fake":
         return FakeLLM()
@@ -22,6 +34,6 @@ def get_client() -> LLMClient:
     if provider == "gemini":
         from app.llm.gemini import GeminiClient
 
-        models = [m.strip() for m in os.environ.get("LLM_MODEL", "").split(",") if m.strip()]
-        return GeminiClient(api_key, models or list(DEFAULT_GEMINI_MODELS))
+        models = [m.strip() for m in os.environ.get(model_variable, "").split(",") if m.strip()]
+        return GeminiClient(api_key, models or list(default_models))
     raise ValueError(f"LLM_PROVIDER không hỗ trợ: '{provider}'. Dùng: fake, gemini.")

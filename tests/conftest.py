@@ -14,6 +14,9 @@ from sqlalchemy.schema import CreateSchema, DropSchema
 from assistant.backend.config import Settings
 from assistant.backend.main import create_app
 
+# Offline even when a test loads .env: load_dotenv never overrides a variable already set.
+os.environ["LLM_PROVIDER"] = "fake"
+
 
 @pytest.fixture
 def clock():

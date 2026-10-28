@@ -1,6 +1,6 @@
 """Concept extraction from per-page slide text (issue #9, spec 10.1).
 
-Pages are read in overlapping windows, each window asks the LLM for 0-8 concepts, duplicates
+Pages are read in overlapping windows, each window asks the LLM for 0-5 concepts, duplicates
 are merged, and a deck with too many candidates is consolidated to the core concepts.
 Slide text is data only, never instructions (spec 10.6).
 """
@@ -21,12 +21,12 @@ from app.llm import LLMClient, RetryableError
 log = logging.getLogger("app.concepts")
 
 PROMPTS = Path(__file__).parent / "prompts"
-EXTRACT_PROMPT = "extract_v2"
+EXTRACT_PROMPT = "extract_v3"
 CONSOLIDATE_PROMPT = "consolidate_v1"
-# 40 pages sliding by 36: the 4-page overlap keeps a concept split across windows whole.
-# v1 used 3 by 2, i.e. 73 calls for the 146-page Week 1 deck: far over the Gemini free tier
-# (20 requests/day), and each call saw too little text to judge what a concept is.
-WINDOW, STEP = 40, 36
+# 20 pages sliding by 18: the 2-page overlap keeps a concept split across windows whole, and
+# 20 pages is few enough that the model reads each one closely (8 calls for the 146-page
+# Week 1 deck). v1 used 3 by 2: 73 calls, and each saw too little text to judge a concept.
+WINDOW, STEP = 20, 18
 SIMILAR_TITLE = 0.9
 MAX_CONCEPTS = 20
 BLOOM_LEVELS = ("remember", "understand", "apply", "analyze", "evaluate", "create")
@@ -138,15 +138,23 @@ def merge(concepts: list[dict], into: list[dict] | None = None) -> list[dict]:
     return merged
 
 
-def extract_concepts(llm: LLMClient, pages: list[str]) -> list[dict]:
-    """Propose concepts for one deck; ``pages[0]`` is page 1."""
+def extract_concepts(llm: LLMClient, pages: list[str],
+                     visuals: list[str] | None = None) -> list[dict]:
+    """Propose concepts for one deck; ``pages[0]`` is page 1.
+
+    ``visuals`` holds the vision model's note per page (see visual.py), "" for none.
+    """
     system = _prompt(EXTRACT_PROMPT)
+    visuals = visuals or [""] * len(pages)
     found: list[dict] = []
     for numbers in windows(len(pages)):
-        if not any(pages[n - 1].strip() for n in numbers):
-            continue  # scanned or blank pages: nothing to read
+        if not any(pages[n - 1].strip() or visuals[n - 1] for n in numbers):
+            continue  # blank pages with nothing seen in them: nothing to read
         known = "\n".join(f"- {c['slug']}: {c['title']}" for c in found) or "(none yet)"
-        slides = "\n".join(f"[Page {n}] {pages[n - 1]}" for n in numbers)
+        slides = "\n".join(
+            f"[Page {n}] {pages[n - 1]}"
+            + (f"\n[Page {n} visual] {visuals[n - 1]}" if visuals[n - 1] else "")
+            for n in numbers)
         prompt = (f"<known_concepts>\n{_data(known)}\n</known_concepts>\n"
                   f"<slide_text>\n{_data(slides)}\n</slide_text>")
         try:

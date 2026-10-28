@@ -116,6 +116,8 @@ class Source(Base):
     file_name: Mapped[str] = mapped_column(Text)
     page: Mapped[int] = mapped_column(Integer)
     text: Mapped[str] = mapped_column(Text)
+    # A vision model's notes on what text extraction misses; never cited (issue #9).
+    visual_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     __table_args__ = (
         CheckConstraint("page >= 1", name="ck_sources_page"),
         UniqueConstraint("course_id", "file_name", "page"),
