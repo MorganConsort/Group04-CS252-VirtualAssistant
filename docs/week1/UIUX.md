@@ -30,11 +30,33 @@ Dưới đây là các hạng mục công việc cần hoàn thiện:
 |---|---|
 | Lưới và khoảng cách | Bước 4 px; khoảng giữa các khối 16 px; lề mobile 16 px |
 | Chữ | Inter; 14 (phụ), 16 (thân), 20 (tiêu đề khối), 24 (tiêu đề trang) |
-| Màu | Chỉ dùng token, không mã màu cứng; tương phản WCAG AA (4.5:1 cho chữ thường) |
+| Màu | Chỉ dùng token, không mã màu cứng; tương phản WCAG AA (4.5:1 cho chữ thường). Màu nhấn (accent) không viết thẳng mã màu: dùng `--color-primary`, `--color-tint`, `--gradient-brand`… (đều suy ra từ `--accent-a` / `--accent-b`) để đổi theo lựa chọn của người dùng |
+| Chuyển động | Dùng token `--ease-standard` / `--ease-decelerate` và `--duration-fast/base/slow` (150/220/320 ms); chỉ animate `transform` và `opacity`; không dùng `filter: blur()` cho thứ chạy liên tục (máy không có GPU phải vẽ lại mỗi khung hình); `prefers-reduced-motion` tắt hết |
 | Vùng bấm | ≥ 44×44 px |
 | Trích dẫn | Mọi nội dung do AI tạo có citation chip `Tên file · tr. N` hoặc nhãn "không có nguồn" |
 | Ngôn ngữ | Tiếng Việt mặc định; thuật ngữ môn học giữ như slide |
 | Companion | Girlfriend mode hiển thị khóa (ổ khóa + "Chỉ dành cho người dùng 18+ đã xác minh"), không hiện hình ảnh lãng mạn khi chưa mở |
+
+## 🎨 Tùy chỉnh giao diện (Appearance)
+
+Người dùng chọn màu nhấn và chế độ sáng/tối trong **Settings → Appearance**. Lựa chọn áp dụng ngay, lưu theo thiết bị (`localStorage`, khóa `pathly.appearance.v1`) và được áp dụng trước lần render đầu nên không bị nháy màu mặc định. Reset demo (`pathly.demo.v1`) không xóa lựa chọn này.
+
+| Màu nhấn | `--accent-a` → `--accent-b` | Tương phản chữ trắng (thấp nhất) |
+|---|---|---|
+| Violet (mặc định) | `#6654d9` → `#c2417c` | 4.84:1 |
+| Ocean | `#1f6fd1` → `#0f7a8a` | 4.94:1 |
+| Forest | `#1f7a4d` → `#3f7a12` | 5.24:1 |
+| Sunset | `#c2410c` → `#be185d` | 5.18:1 |
+| Slate | `#475569` → `#334155` | 7.58:1 |
+
+Chế độ: **Match device** (theo `prefers-color-scheme`), **Light**, **Dark**. Màu sáng/tối viết bằng `light-dark()` nên ép một chế độ chỉ cần đổi `color-scheme`.
+
+**Thêm một màu nhấn mới:**
+1. Thêm khối `[data-accent="ten-moi"] { --accent-a: …; --accent-b: …; }` trong `ui/src/styles.css`.
+2. Thêm `{ id: "ten-moi", label: "…" }` vào `ACCENTS` trong `ui/src/features/appearance/appearance.ts`.
+3. Kiểm tra chữ trắng đạt ≥ 4.5:1 ở cả hai đầu và điểm giữa của gradient trước khi merge.
+
+Code: `ui/src/features/appearance/` (`AppearanceStore` + `AppearancePicker`, có test).
 
 ## 🧪 Câu chữ cho lỗi (Error copy)
 

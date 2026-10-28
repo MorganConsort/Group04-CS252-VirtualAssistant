@@ -1,50 +1,79 @@
 /* Design tokens (docs/week1/UIUX.md). New components use only these. */
 :root {
-  --color-primary: #6654d9;
-  --color-primary-ink: #5a48cf;
+  /* User accent (src/appearance.ts sets data-accent). Both ends keep white text >= 4.5:1;
+     every accent-dependent token below is derived from these two. */
+  --accent-a: #6654d9;
+  --accent-b: #c2417c;
+  --color-primary: var(--accent-a);
+  --color-primary-ink: light-dark(
+    color-mix(in oklab, var(--accent-a) 88%, black),
+    color-mix(in oklab, var(--accent-a) 55%, white)
+  );
   --color-on-primary: #ffffff;
-  --color-bg: #f6f8fc;
-  --color-surface: #ffffff;
-  --color-surface-alt: #f8fafd;
-  --color-text: #182439;
-  --color-muted: #66748a;
-  --color-line: #e6eaf2;
-  --color-tint: #f0edff;
-  --color-success: #13805c;
-  --color-success-bg: #e5f8ef;
-  --color-warning-bg: #fff4dc;
-  --color-warning-ink: #845a22;
-  --color-danger: #c0392b;
-  --color-danger-bg: #fdecea;
-  --color-companion: #d9548f;
-  --color-warning: #9a5f12;
-  --color-focus: #a699ff;
-  --color-today-line: #cec5ff;
-  --color-scrim: #18243970;
+  --color-bg: light-dark(#f6f8fc, #0f1626);
+  --color-surface: light-dark(#ffffff, #182238);
+  --color-surface-alt: light-dark(#f8fafd, #1e2a44);
+  --color-text: light-dark(#182439, #e8edf7);
+  --color-muted: light-dark(#66748a, #a3b0c7);
+  --color-line: light-dark(#e6eaf2, #2c3956);
+  --color-tint: light-dark(
+    color-mix(in oklab, var(--accent-a) 10%, white),
+    color-mix(in oklab, var(--accent-a) 25%, #182238)
+  );
+  --color-success: light-dark(#13805c, #4fd1a1);
+  --color-success-bg: light-dark(#e5f8ef, #123a2e);
+  --color-warning-bg: light-dark(#fff4dc, #3d3018);
+  --color-warning-ink: light-dark(#845a22, #f2c27a);
+  --color-danger: light-dark(#c0392b, #ff8a7a);
+  --color-danger-bg: light-dark(#fdecea, #3e1d1d);
+  --color-companion: light-dark(#d9548f, #f08cb8);
+  --color-warning: light-dark(#9a5f12, #f2c27a);
+  --color-focus: color-mix(in oklab, var(--accent-a) 60%, white);
+  --color-today-line: light-dark(
+    color-mix(in oklab, var(--accent-a) 35%, white),
+    color-mix(in oklab, var(--accent-a) 70%, #182238)
+  );
+  --color-scrim: light-dark(#18243970, #05081299);
   /* Sidebar and toast stay dark in both themes. */
   --color-nav-bg: #1b2440;
   --color-nav-text: #b8c2d9;
   --color-nav-muted: #8d9ab8;
-  --color-nav-accent: #c8bfff;
+  --color-nav-accent: color-mix(in oklab, var(--accent-a) 40%, white);
   --color-nav-panel: #ffffff0f;
   --color-nav-line: #ffffff1f;
-  --shadow-md: 0 8px 30px #18243930;
-  --shadow-lg: 0 30px 100px #18243930;
-  --shadow-glow: 0 10px 28px -8px #6654d999;
-  --shadow-glow-strong: 0 14px 32px -8px #6654d9b3;
-  /* Brand gradient runs primary violet -> companion pink; ends darkened so white text stays >= 4.5:1. */
-  --gradient-brand: linear-gradient(135deg, #6654d9 0%, #8a4fd0 55%, #c2417c 100%);
-  --gradient-glow: linear-gradient(135deg, #b3a9ff 0%, #f08cb8 100%);
-  --gradient-text: var(--gradient-brand);
+  --shadow-md: 0 8px 30px light-dark(#18243930, #00000066);
+  --shadow-lg: 0 30px 100px light-dark(#18243930, #00000080);
+  --shadow-glow: 0 10px 28px -8px color-mix(in oklab, var(--accent-a) 60%, transparent);
+  --gradient-brand: linear-gradient(
+    135deg,
+    var(--accent-a) 0%,
+    color-mix(in oklab, var(--accent-a), var(--accent-b)) 55%,
+    var(--accent-b) 100%
+  );
+  --gradient-glow: linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--accent-a) 50%, white) 0%,
+    color-mix(in oklab, var(--accent-b) 50%, white) 100%
+  );
+  /* Text gradient: brand on light surfaces, the lighter glow on dark ones. */
+  --gradient-text: linear-gradient(
+    135deg,
+    light-dark(var(--accent-a), color-mix(in oklab, var(--accent-a) 50%, white)) 0%,
+    light-dark(var(--accent-b), color-mix(in oklab, var(--accent-b) 50%, white)) 100%
+  );
   --gradient-nav:
-    radial-gradient(130% 55% at 0% 0%, #5b47c466 0%, transparent 70%),
-    radial-gradient(120% 45% at 100% 100%, #d9548f33 0%, transparent 70%),
-    linear-gradient(180deg, #1b2440 0%, #1f1c45 100%);
-  --gradient-nav-active: linear-gradient(90deg, #8b7dff59 0%, #8b7dff14 100%);
+    radial-gradient(130% 55% at 0% 0%, color-mix(in oklab, var(--accent-a) 40%, transparent) 0%, transparent 70%),
+    radial-gradient(120% 45% at 100% 100%, color-mix(in oklab, var(--accent-b) 20%, transparent) 0%, transparent 70%),
+    linear-gradient(180deg, #1b2440 0%, color-mix(in oklab, var(--accent-a) 14%, #1b2440) 100%);
+  --gradient-nav-active: linear-gradient(
+    90deg,
+    color-mix(in oklab, var(--accent-a) 45%, transparent) 0%,
+    color-mix(in oklab, var(--accent-a) 10%, transparent) 100%
+  );
   --gradient-wash: linear-gradient(115deg, var(--color-tint) 0%, var(--color-surface) 60%);
   --gradient-aurora:
-    radial-gradient(55% 45% at 12% 8%, #6654d940 0%, transparent 70%),
-    radial-gradient(50% 45% at 92% 95%, #d9548f33 0%, transparent 70%);
+    radial-gradient(55% 45% at 12% 8%, color-mix(in oklab, var(--accent-a) 25%, transparent) 0%, transparent 70%),
+    radial-gradient(50% 45% at 92% 95%, color-mix(in oklab, var(--accent-b) 20%, transparent) 0%, transparent 70%);
   /* Motion (Material 3 curves): decelerate for entering, standard for state changes. */
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
   --ease-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
@@ -76,30 +105,34 @@
   background: var(--color-bg);
   font-synthesis: none;
 }
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-primary-ink: #b3a9ff;
-    --color-bg: #0f1626;
-    --color-surface: #182238;
-    --color-surface-alt: #1e2a44;
-    --color-text: #e8edf7;
-    --color-muted: #a3b0c7;
-    --color-line: #2c3956;
-    --color-tint: #2a2950;
-    --color-success: #4fd1a1;
-    --color-success-bg: #123a2e;
-    --color-warning-bg: #3d3018;
-    --color-warning-ink: #f2c27a;
-    --color-danger: #ff8a7a;
-    --color-danger-bg: #3e1d1d;
-    --color-companion: #f08cb8;
-    --color-warning: #f2c27a;
-    --color-today-line: #5b4fb0;
-    --color-scrim: #05081299;
-    --shadow-md: 0 8px 30px #00000066;
-    --shadow-lg: 0 30px 100px #00000080;
-    --gradient-text: var(--gradient-glow);
-  }
+/* Theme: light-dark() above follows color-scheme, so forcing a theme is one property. */
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+/* Accent presets: white text contrast checked >= 4.8:1 at both ends and the midpoint.
+   Not scoped to :root so each picker swatch can preview its own preset. */
+[data-accent="violet"] {
+  --accent-a: #6654d9;
+  --accent-b: #c2417c;
+}
+[data-accent="ocean"] {
+  --accent-a: #1f6fd1;
+  --accent-b: #0f7a8a;
+}
+[data-accent="forest"] {
+  --accent-a: #1f7a4d;
+  --accent-b: #3f7a12;
+}
+[data-accent="sunset"] {
+  --accent-a: #c2410c;
+  --accent-b: #be185d;
+}
+[data-accent="slate"] {
+  --accent-a: #475569;
+  --accent-b: #334155;
 }
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -107,6 +140,8 @@
   *::after {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
+    /* Infinite animations would otherwise flicker at 0.01ms per cycle. */
+    animation-iteration-count: 1 !important;
   }
 }
 * {
@@ -455,19 +490,57 @@ main {
   font-weight: 600;
   white-space: normal;
 }
+/* Gradient buttons: ::after is the face, ::before a blurred copy that drifts behind it
+   as an ambient glow. Only transform animates (opacity on hover), so it stays on the GPU. */
 .button.primary,
 .primary-action,
 .auth-submit {
-  background: var(--gradient-brand);
+  position: relative;
+  isolation: isolate;
+  background: transparent;
   color: var(--color-on-primary);
-  box-shadow: var(--shadow-glow);
+}
+:is(.button.primary, .primary-action, .auth-submit)::before,
+:is(.button.primary, .primary-action, .auth-submit)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--gradient-brand);
+  pointer-events: none;
+}
+:is(.button.primary, .primary-action, .auth-submit)::after {
+  z-index: -1;
+}
+/* Feathered with radial gradients, not filter: blur(), which software-rendered
+   (GPU-less) Chrome recomputes every frame and starved the e2e runs. */
+:is(.button.primary, .primary-action, .auth-submit)::before {
+  z-index: -2;
+  inset: -10px -18px -18px;
+  background:
+    radial-gradient(closest-side at 35% 55%, color-mix(in oklab, var(--accent-a) 65%, transparent), transparent),
+    radial-gradient(closest-side at 65% 55%, color-mix(in oklab, var(--accent-b) 60%, transparent), transparent);
+  opacity: 0.6;
+  animation: ambient 4.5s ease-in-out infinite alternate;
+  transition: opacity var(--duration-base) var(--ease-standard);
+}
+@keyframes ambient {
+  from {
+    transform: translateX(-10%) scale(0.92);
+  }
+  to {
+    transform: translateX(10%) scale(1.05);
+  }
 }
 :is(.button.primary, .primary-action, .auth-submit):hover:not(:disabled) {
   filter: brightness(1.08);
-  box-shadow: var(--shadow-glow-strong);
 }
-:is(.button.primary, .primary-action, .auth-submit):disabled {
-  box-shadow: none;
+:is(.button.primary, .primary-action, .auth-submit):is(:hover, :focus-visible):not(:disabled)::before {
+  opacity: 0.9;
+}
+:is(.button.primary, .primary-action, .auth-submit):disabled::before {
+  animation: none;
+  opacity: 0;
 }
 .section-title {
   margin-top: 30px;
@@ -1062,6 +1135,55 @@ legend {
   font-weight: 600;
   font-size: 14px;
   padding: 0 8px;
+}
+/* Appearance picker: real radio inputs (keyboard + screen readers); the label shows state. */
+.appearance fieldset {
+  margin: var(--space-4) 0;
+}
+.swatches,
+.segmented {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.swatch,
+.segmented label {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard);
+}
+.swatch input,
+.segmented input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+.swatch-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  /* Resolves against this swatch's own [data-accent], so each previews its preset. */
+  background: linear-gradient(135deg, var(--accent-a), var(--accent-b));
+}
+:is(.swatch, .segmented label):has(input:checked) {
+  border-color: var(--color-primary-ink);
+  background: var(--color-tint);
+  font-weight: 600;
+}
+:is(.swatch, .segmented label):has(input:focus-visible) {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
 }
 .answer {
   display: flex;
