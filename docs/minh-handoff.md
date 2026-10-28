@@ -56,7 +56,7 @@ Copy-Item .env.example .env
 Sửa `.env`, dùng thông tin database của mình:
 
 ```dotenv
-DATABASE_URL=postgresql+psycopg://pathly:YOUR_PASSWORD@localhost:5432/pathly
+PATHLY_DATABASE_URL=postgresql+psycopg://pathly:YOUR_PASSWORD@localhost:5432/pathly
 ```
 
 Khởi động lại backend. Cả SQLite và PostgreSQL dùng cùng schema và API. Dữ liệu thời gian được chuẩn hóa về UTC; cách dùng dialect/driver tham khảo [SQLAlchemy PostgreSQL](https://docs.sqlalchemy.org/en/20/dialects/postgresql.html).
@@ -139,14 +139,14 @@ Mã lỗi: 401 session không hợp lệ/hết hạn, 403 thiếu quyền sửa 
 
 ## Tích hợp AI
 
-Copy `.env.example` thành `.env`; đặt cả `LLM_API_KEY` và `LLM_MODEL`. Giữ key ở backend. Model cần là model có sẵn trong tài khoản của Minh.
+Copy `.env.example` thành `.env`; đặt cả `COMPANION_LLM_API_KEY` và `COMPANION_LLM_MODEL`. Giữ key ở backend. Model cần là model có sẵn trong tài khoản của Minh.
 
 OpenAI-compatible endpoint:
 
 ```dotenv
-LLM_BASE_URL=https://api.openai.com/v1
-LLM_API_KEY=YOUR_API_KEY
-LLM_MODEL=YOUR_AVAILABLE_MODEL
+COMPANION_LLM_BASE_URL=https://api.openai.com/v1
+COMPANION_LLM_API_KEY=YOUR_API_KEY
+COMPANION_LLM_MODEL=YOUR_AVAILABLE_MODEL
 ```
 
 Adapter gửi `model` và `messages` tới `POST /chat/completions`, theo [OpenAI Chat Completions reference](https://developers.openai.com/api/reference/resources/chat/subresources/completions/methods/create).
@@ -154,9 +154,9 @@ Adapter gửi `model` và `messages` tới `POST /chat/completions`, theo [OpenA
 Với Gemini, đổi base URL và dùng Gemini key/model theo [tài liệu OpenAI compatibility của Google](https://ai.google.dev/gemini-api/docs/openai):
 
 ```dotenv
-LLM_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai
-LLM_API_KEY=YOUR_GEMINI_KEY
-LLM_MODEL=YOUR_AVAILABLE_GEMINI_MODEL
+COMPANION_LLM_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai
+COMPANION_LLM_API_KEY=YOUR_GEMINI_KEY
+COMPANION_LLM_MODEL=YOUR_AVAILABLE_GEMINI_MODEL
 ```
 
 Prompt nhận tên, mood, personality, báo cáo tuần, tối đa 5 pending task và phiên kế tiếp của chính user. Chỉ gửi tối đa 10 tin nhắn lịch sử làm ngữ cảnh. Không gửi email, password, bearer token hay task riêng của người khác. Các personality: `warm`, `direct`, `playful`.
@@ -180,3 +180,7 @@ Bản local ngày 28/10/2026 sau double-check: **57 test Python và 9 test front
 Bộ test bao gồm CLI cũ, scheduler, auth/session, quyền sở hữu và nhóm, timezone, preview/commit, check-in idempotent, replan, reminder, AI provider/fallback và lưu DB qua restart. Test frontend kiểm tra state demo cũ và API transport. CI có job Python, PostgreSQL và UI. Thư viện TestClient hiện phát một deprecation warning về việc chuyển từ httpx sang httpx2; các test vẫn chạy thành công.
 
 SQLite mặc định dành cho một backend development process. PostgreSQL có row lock trong các transaction lên lịch/check-in. Cache báo cáo tách theo user/timezone/tuần, tối đa 128 mục, TTL 10 giây và xóa khi transaction commit trong cùng process. Nếu triển khai nhiều worker, cập nhật ở worker khác có thể mất tối đa 10 giây để hiện trong báo cáo. Chưa có password reset, email verification, rate limiting, migration nhiều phiên bản hay triển khai hosting. Nhắc lịch được tạo khi client polling; không có thông báo hệ điều hành khi đóng ứng dụng.
+
+## Đồng bộ main ngày 28/10/2026
+
+Main hiện có roadmap concept/câu hỏi mới và database app riêng. Scheduler Workspace là tính năng tùy chọn theo slide cũ, dùng `PATHLY_DATABASE_URL` và `COMPANION_LLM_*` để không xung đột `DATABASE_URL`/`LLM_*` của app. Các issue #9 (concept extraction) và #10 (cited item generation) chưa được phần scheduler này giải quyết. Các kiểm tra concept, ingest, retrieval, auth theo roadmap mới cần được theo dõi trong issue tương ứng.

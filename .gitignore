@@ -26,11 +26,25 @@ dist/
 .DS_Store
 Thumbs.db
 
-# Local backend data and credentials
+# Local environment and databases (never commit secrets or real data)
 .env
 .env.*
 !.env.example
+local.db
+local.db-*
+*.sqlite
+*.sqlite3
+data/local.db
+
+# Local secrets (template: .env.example)
+.env
+.env.*
+!.env.example
+
+# Scheduling Workspace local files
 *.db
+.env.*
+!.env.example
 *.db-shm
 *.db-wal
 .uv-cache/
