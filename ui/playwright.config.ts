@@ -32,13 +32,23 @@ export default defineConfig({
       testMatch: /api\.spec\.ts/,
       use: { ...devices["Desktop Chrome"], baseURL: "http://127.0.0.1:5179" },
     },
+    {
+      name: "backend-ui",
+      testMatch: /concepts\.spec\.ts/,
+      use: { ...devices["Desktop Chrome"], baseURL: "http://127.0.0.1:5180" },
+    },
   ],
   webServer: [
     {
       command: "pnpm exec vite --host 127.0.0.1 --port 5178 --strictPort",
       url: "http://127.0.0.1:5178",
       reuseExistingServer: false,
-      env: { VITE_CHECK_MODE: "demo" },
+      // Explicit modes: a developer's ui/.env.local must not switch the suites.
+      env: {
+        VITE_CHECK_MODE: "demo",
+        VITE_BACKEND_MODE: "demo",
+        VITE_CACHE_DIR: "node_modules/.vite-e2e-demo",
+      },
     },
     {
       command: "pnpm exec vite --host 127.0.0.1 --port 5179 --strictPort",
@@ -47,6 +57,18 @@ export default defineConfig({
       env: {
         VITE_CHECK_MODE: "api",
         VITE_API_BASE_URL: "http://127.0.0.1:5179/api/v1",
+        VITE_BACKEND_MODE: "demo",
+        VITE_CACHE_DIR: "node_modules/.vite-e2e-api",
+      },
+    },
+    {
+      command: "pnpm exec vite --host 127.0.0.1 --port 5180 --strictPort",
+      url: "http://127.0.0.1:5180",
+      reuseExistingServer: false,
+      env: {
+        VITE_BACKEND_MODE: "api",
+        VITE_API_URL: "http://127.0.0.1:5180",
+        VITE_CACHE_DIR: "node_modules/.vite-e2e-backend",
       },
     },
   ],

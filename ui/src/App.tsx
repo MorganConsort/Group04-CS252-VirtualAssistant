@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { checkSetup } from "./api/service";
 import { currentCourse } from "./api/mock";
+import { backendEnabled, session } from "./api/backend";
 import { AuthScreen } from "./components/AuthScreen";
 import { CoursesPage } from "./pages/CoursesPage";
 import { Button } from "./components/Button";
@@ -27,8 +28,10 @@ import { SchedulePage } from "./pages/SchedulePage";
 import Workspace from "./Workspace";
 
 export default function App() {
-  // Kept in memory only: a reload logs out until real tokens exist (#6).
-  const [token, setToken] = useState<string | null>(null);
+  // Demo tokens live in memory only; a real session survives a reload of this tab.
+  const [token, setToken] = useState<string | null>(() =>
+    backendEnabled ? session.get() || null : null,
+  );
   const [state, setState] = useState(readState);
   const [page, setPage] = useState<Page>(
     () =>
@@ -335,7 +338,7 @@ export default function App() {
           />
         )}
         <div hidden={page !== "Library"}>
-          <CoursesPage courseId={currentCourse.id} />
+          <CoursesPage course={currentCourse.name} />
         </div>
         {page === "Library" && (
           <LibraryPage
