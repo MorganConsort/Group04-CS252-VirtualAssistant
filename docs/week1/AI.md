@@ -16,7 +16,7 @@ Dưới đây là các hạng mục công việc cần hoàn thiện:
   - **Cửa sổ trang**: 3 trang, bước 2.
   - **Output**: `slug, title, summary, bloom_level, source_pages`.
   - **Gộp trùng**: slug trùng, hoặc tên chuẩn hóa giống ≥ 0,9.
-- [ ] **Task 3: BM25 retrieval (#11, Thắng, 8 giờ)**
+- [x] **Task 3: BM25 retrieval (#11, Thắng, 8 giờ)**
   - **Thư viện**: `rank-bm25`; tokenize giữ dấu tiếng Việt.
   - **Ngưỡng**: dưới `MIN_SCORE` trả rỗng → "không tìm thấy".
   - **Đo**: top-5 hit rate trên benchmark.
@@ -88,9 +88,19 @@ tests/test_llm.py, test_concepts.py, test_retrieval.py, test_items.py
 | # | Concept | Loại | Đúng nội dung? | Đúng trang? | Ghi chú |
 |---|---|---|---|---|---|
 
-**Retrieval (#11)**
-- `MIN_SCORE` = _chưa chọn_ · cách chọn: _..._
-- Top-5 hit rate (case `normal`): _..._ · Case `missing_knowledge` trả rỗng: _.../..._
+**Retrieval (#11)** — chạy `python eval/run_retrieval.py` trên `eval/benchmark.jsonl` mẫu (2 case `normal`, 1 case `missing_knowledge`) với fixture 6 trang slide CSC10014.
+
+| `MIN_SCORE` | Top-5 hit rate (`normal`) | `missing_knowledge` trả rỗng |
+|---:|---:|---:|
+| 0.5 | 100,0% (2/2) | 100,0% (1/1) |
+| 1.0 | 100,0% (2/2) | 100,0% (1/1) |
+| **1.5** | **100,0% (2/2)** | **100,0% (1/1)** |
+| 2.0 | 100,0% (2/2) | 100,0% (1/1) |
+| 2.5 | 100,0% (2/2) | 100,0% (1/1) |
+| 3.0 | 100,0% (2/2) | 100,0% (1/1) |
+
+- `MIN_SCORE` = **1.5** · cách chọn: giữ ngưỡng mặc định vì mọi ngưỡng quét 0,5–3,0 đều đạt 100% trên bộ mẫu; cần thêm case để tinh chỉnh.
+- Top-5 hit rate (case `normal`): **100,0% (2/2)** · Case `missing_knowledge` trả rỗng: **1/1**.
 
 ### Hạn chế & Hướng cải thiện
 | # | Hạn chế | Hướng cải thiện |
