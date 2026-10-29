@@ -6,7 +6,9 @@
 - **Related**: Issue #18, ADR 001, APP_SPECIFICATION sections 6.3 & 13
 
 ## Context
+
 The Pathly Study Companion project requires an operational staging environment that satisfies the course objectives:
+
 1. **Zero-Cost ($0 Free Tier)**: Suitable for academic coursework and team prototyping without incurring recurring infrastructure expenses.
 2. **Continuous Deployment (CD)**: Automatically triggered upon merging Pull Requests into the `main` branch (deployment turnaround < 10 minutes).
 3. **Isolation and Security**: Sensitive operational secrets (`DATABASE_URL`, `JWT_SECRET`, `LLM_API_KEY`) must reside securely on cloud service provider dashboards, never committed to Git.
@@ -17,9 +19,10 @@ The Pathly Study Companion project requires an operational staging environment t
 ## Decision
 
 ### 1. Deployment Architecture
+
 The team has agreed on a decoupled staging infrastructure comprising three independent tiers:
 
-```
+```text
 [ User / Browser ]
         │
         ├─────────────────────────────┐
@@ -51,7 +54,7 @@ The team has agreed on a decoupled staging infrastructure comprising three indep
 ### 2. Alternatives Considered
 
 | Component | Selected Platform | Alternative Considered | Rationale for Rejection |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | **Frontend** | **Vercel** | Netlify, GitHub Pages | GitHub Pages requires hacky workarounds for client-side routing fallbacks; Netlify is capable, but Vercel offers faster Vite build caching and seamless GitHub integration. |
 | **Backend** | **Render (Docker)** | AWS EC2 / Lightsail | Raw EC2 instances require manual system administration (OS patching, reverse proxy Nginx configuration, Certbot SSL rotation), increasing operational overhead and risks of unexpected billing. |
 | **Database** | **Render Postgres / Neon** | Self-hosted Postgres on VM | Self-hosting database instances introduces data loss risks, lacks automated managed backups, and demands database administrator maintenance. |

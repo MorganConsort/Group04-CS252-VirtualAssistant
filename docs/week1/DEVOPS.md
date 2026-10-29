@@ -12,7 +12,7 @@ Dưới đây là các hạng mục công việc cần hoàn thiện:
   - **Branch protection**: PR bắt buộc, 1 approve, CI pass, cấm force push.
   - **CI**: lint, test, quét secret, kiểm tra benchmark, kiểm tra tên nhánh của PR.
   - **Hook**: 6/6 thành viên chạy `python dev.py devops install-hooks`.
-- [ ] **Task 2: Docker Compose + staging (#18, Lê Hồng Đăng, 10 giờ)**
+- [X] **Task 2: Docker Compose + staging (#18, Lê Hồng Đăng, 10 giờ)**
   - **Local**: `docker compose up --build` chạy API + Postgres 16.
   - **Staging**: UI trên Vercel; API + DB trên dịch vụ free tier; auto-deploy từ `main`.
   - **Tài liệu**: `docs/DEPLOYMENT.md`, ADR `docs/adr/002-hosting.md`.
