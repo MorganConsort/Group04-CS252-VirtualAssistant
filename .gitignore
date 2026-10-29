@@ -35,3 +35,16 @@ local.db-*
 *.sqlite
 *.sqlite3
 data/local.db
+
+# Local secrets (template: .env.example)
+.env
+.env.*
+!.env.example
+
+# Scheduling Workspace local files
+*.db
+.env.*
+!.env.example
+*.db-shm
+*.db-wal
+.uv-cache/
