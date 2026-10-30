@@ -5,4 +5,4 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
 
-from assistant.backend.main import app  # noqa: E402
+from assistant.backend.main import app  # noqa: F401 - re-exported for Vercel
