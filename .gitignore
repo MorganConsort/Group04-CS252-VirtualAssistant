@@ -48,3 +48,4 @@ data/local.db
 *.db-shm
 *.db-wal
 .uv-cache/
+.vercel
