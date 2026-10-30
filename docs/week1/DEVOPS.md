@@ -58,13 +58,43 @@ Dưới đây là các hạng mục công việc cần hoàn thiện:
 | UI (Vite) | 5173 | mở `http://127.0.0.1:5173` |
 | Postgres | 5432 | `docker compose ps` (healthy) |
 
+## 🚀 Deploy API lên Vercel (PR #43)
+
+Backend FastAPI chạy trên Vercel (project `cs252-virtual-assistant`, preset FastAPI), DB là Postgres trên Neon (gắn qua Vercel Marketplace).
+
+| Môi trường | URL | Bảo vệ |
+|---|---|---|
+| Production | https://cs252-virtual-assistant.vercel.app | Công khai |
+| Preview | `cs252-virtual-assistant-<hash>-vodat2553-4664.vercel.app` | Vercel Authentication (chỉ thành viên team) |
+
+**Cách hoạt động**
+- `index.py` ở gốc repo là entrypoint (`[tool.vercel] entrypoint = "index:app"` trong `pyproject.toml`): Vercel import module từ gốc repo, còn code nằm trong `src/`, nên file này thêm `src/` vào `sys.path` rồi re-export `app`.
+- `.vercelignore` chặn `.env*`, `*.db` và cache để `vercel deploy` không upload secret hay DB local.
+- App đọc **`DATABASE_URL`**; nếu thiếu sẽ rơi về SQLite và crash (`unable to open database file`) vì filesystem của Vercel chỉ đọc. Biến này phải có ở **cả Preview và Production**. Các biến `POSTGRES_*`/`PG*` do Neon tạo không được app dùng.
+
+**Deploy (chưa nối Git, deploy bằng CLI)**
+```bash
+npm i -g vercel && vercel link          # lần đầu
+vercel deploy                           # preview
+vercel curl <preview-url>/api/v1/health # qua lớp bảo vệ, mong đợi {"status":"ok",...}
+vercel deploy --prod                    # production
+curl https://cs252-virtual-assistant.vercel.app/api/v1/health
+vercel logs --deployment <url> --query 'level:error'
+```
+
+**Lưu ý**
+- Thêm/sửa biến môi trường: `vercel env add <NAME> <preview|production>` (chạy trong PowerShell; trong Git Bash/Anaconda shell lệnh `vercel` có thể lỗi `Cannot find module ...\vc.js`) hoặc qua dashboard → Settings → Environment Variables.
+- Chưa có `LLM_*`/`COMPANION_LLM_*` trên Vercel nên health trả `ai_provider: offline`.
+- `/` trả 404 là bình thường: API nằm dưới `/api/v1`, tài liệu ở `/docs`.
+- UI (`ui/`) chưa deploy lên Vercel.
+
 ## 🔐 Quản lý secret
 
 | Secret | Ở đâu | Ai giữ |
 |---|---|---|
 | `LLM_API_KEY` | `.env` local, dashboard dịch vụ staging | AI lead + DevOps |
 | `JWT_SECRET` | `.env` local (giá trị ngẫu nhiên riêng), dashboard staging | DevOps |
-| `DATABASE_URL` | `.env` local, dashboard staging | DevOps |
+| `DATABASE_URL` | `.env` local, Vercel env (Preview + Production, Neon) | DevOps |
 
 Lỡ commit secret: **thu hồi key ở nhà cung cấp trước**, báo DevOps, sau đó mới xóa khỏi lịch sử.
 
@@ -83,7 +113,7 @@ Lỡ commit secret: **thu hồi key ở nhà cung cấp trước**, báo DevOps,
 |---|---|
 | Thành viên đã cài hook | _1/6_ (xem bảng dưới) |
 | URL staging UI | _..._ |
-| URL staging API | _..._ |
+| URL staging API | https://cs252-virtual-assistant.vercel.app (Vercel, PR #43) |
 | Thời gian từ merge đến staging cập nhật | _... phút_ |
 
 ### Ai đã cài hook (#17)

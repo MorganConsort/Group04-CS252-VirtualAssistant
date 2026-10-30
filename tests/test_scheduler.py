@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from pydantic import ValidationError
@@ -13,7 +13,7 @@ from assistant.backend.scheduler import (
 )
 from assistant.backend.schemas import PlanRequest
 
-START = datetime(2030, 1, 7, 2, tzinfo=timezone.utc)
+START = datetime(2030, 1, 7, 2, tzinfo=UTC)
 
 
 def at(offset):

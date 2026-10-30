@@ -50,4 +50,4 @@ pythonpath = ["src"]
 testpaths = ["tests"]
 
 [tool.vercel]
-entrypoint = "assistant.backend.main:app"
+entrypoint = "index:app"
