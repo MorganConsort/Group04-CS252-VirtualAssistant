@@ -1,5 +1,5 @@
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from io import BytesIO
 from uuid import uuid4
 
@@ -20,7 +20,7 @@ os.environ["LLM_PROVIDER"] = "fake"
 
 @pytest.fixture
 def clock():
-    return [datetime(2030, 1, 7, 0, 0, tzinfo=timezone.utc)]
+    return [datetime(2030, 1, 7, 0, 0, tzinfo=UTC)]
 
 
 @pytest.fixture(

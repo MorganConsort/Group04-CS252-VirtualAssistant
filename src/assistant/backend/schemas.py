@@ -1,6 +1,6 @@
 """Validated request/response contracts, shared by Swagger and generated OpenAPI."""
 
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from typing import Annotated, Literal
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
@@ -17,7 +17,7 @@ from pydantic import (
 
 
 def to_utc(value: datetime):
-    return value.astimezone(timezone.utc)
+    return value.astimezone(UTC)
 
 
 Timestamp = Annotated[AwareDatetime, AfterValidator(to_utc)]
