@@ -3,10 +3,11 @@
 import json
 
 import pytest
+from conftest import make_pdf, register
 from sqlalchemy import text
 
 from app.items.generate import generate_items, parse_items, pick_pages, save_items
-from app.llm import FakeLLM
+from app.llm import FakeLLM, get_client
 
 SOURCES = [
     {"id": "s_1", "page": 1, "text": "Solution ladder: chọn bậc thấp nhất đủ dùng."},
@@ -145,3 +146,54 @@ def test_valid_items_are_saved_as_ungraded_drafts(app, concept_id):
         ("mcq", "s_2", 0, "draft"), ("short", "s_1", 0, "draft")]
     assert json.loads(rows[0]["choices"]) == CHOICES and rows[0]["rubric"] is None
     assert rows[1]["choices"] is None and len(json.loads(rows[1]["rubric"])) == 2
+
+
+def generate(app, client, headers, course, concept, llm):
+    app.dependency_overrides[get_client] = lambda: llm
+    return client.post(f"/api/v1/courses/{course}/concepts/{concept}/items:generate",
+                       headers=headers)
+
+
+@pytest.fixture
+def course(client, headers):
+    return client.post("/api/v1/courses", headers=headers, json={"title": "CSC10014"}).json()["id"]
+
+
+def test_api_generates_cited_drafts_and_lists_them(app, client, headers, course):
+    pdf = make_pdf("Solution ladder: climb only as high as needed",
+                   "Search (BM25) rung of the solution ladder")
+    files = {"file": ("week01.pdf", pdf, "application/pdf")}
+    assert client.post(f"/api/v1/courses/{course}/sources", headers=headers,
+                       files=files).status_code == 201
+    with app.state.database.sessions() as db:
+        ids = dict(db.execute(text("SELECT page, id FROM sources")).all())
+        db.execute(text("INSERT INTO concepts (id, course_id, slug, title, summary, source_pages) "
+                        "VALUES ('c_1', :c, 'solution-ladder', 'Solution ladder', "
+                        "'Climb only as high as needed', '[1, 2]')"), {"c": course})
+        db.commit()
+    llm = FakeLLM({"<concept>": answer(mcq(source_id=ids[2]), short(source_id=ids[1]),
+                                       mcq(source_id="s_99"))})
+    response = generate(app, client, headers, course, "c_1", llm)
+    assert response.status_code == 201, response.text
+    body = response.json()
+    assert [(i["type"], i["page"], i["file_name"], i["status"]) for i in body] == [
+        ("short", 1, "week01.pdf", "draft"), ("mcq", 2, "week01.pdf", "draft")]
+    assert body[1]["choices"] == CHOICES and body[0]["rubric"] == short()["rubric"]
+    listed = client.get(f"/api/v1/courses/{course}/concepts/c_1/items", headers=headers)
+    assert listed.json() == body
+
+    failed = generate(app, client, headers, course, "c_1", FakeLLM({"<concept>": "oops"}))
+    assert (failed.status_code, failed.json()["detail"]) == (503, "items_unavailable")
+    assert generate(app, client, headers, course, "nope", llm).status_code == 404
+
+
+def test_api_needs_pages_and_hides_other_users_courses(app, client, headers, course):
+    with app.state.database.sessions() as db:
+        db.execute(text("INSERT INTO concepts (id, course_id, slug, title) "
+                        "VALUES ('c_1', :c, 'x', 'X')"), {"c": course})
+        db.commit()
+    response = generate(app, client, headers, course, "c_1", FakeLLM())
+    assert (response.status_code, response.json()["detail"]) == (404, "no_sources")
+    other = {"Authorization": f"Bearer {register(client, 'Lan', 'lan@example.com')['access_token']}"}
+    assert client.get(f"/api/v1/courses/{course}/concepts/c_1/items",
+                      headers=other).status_code == 404
